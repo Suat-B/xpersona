@@ -370,48 +370,11 @@ function loadMoreCars() {
 
 function createCarCardHTML(car) {
     const isFav = favorites.has(car.id);
-    const dealClass = car.dealRating === 'Great Deal' ? 'great-deal' : car.dealRating === 'Good Deal' ? 'good-deal' : 'fair-deal';
-
-    const downPaymentAmount = car.price * DOWN_PAYMENT_PERCENT;
+    const downPaymentAmount = car.price * 0.1; // 10% down
     const downPaymentText = formatCurrencyWhole(downPaymentAmount);
-
-    // Calculate monthly payment estimate (rough estimate: 60 months, 7% APR)
     const monthlyPayment = Math.round((car.price * 1.07) / 60);
 
     return `
-    <div class="car-image-wrapper">
-      <img src="${car.imageUrl}" alt="${car.year} ${car.make} ${car.model}" class="car-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800'">
-      <button class="car-favorite ${isFav ? 'active' : ''}" data-id="${car.id}" onclick="event.stopPropagation(); toggleFavorite(${car.id}, this)">
-        <svg viewBox="0 0 24 24" fill="${isFav ? '#ff4444' : 'none'}" stroke="${isFav ? '#ff4444' : '#666'}" stroke-width="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-        </svg>
-      </button>
-    </div>
-    <div class="car-content">
-      <h3 class="car-title">${car.year} ${car.make} ${car.model}</h3>
-      <p class="car-subtitle">${car.trim || 'Base'} | ${car.mileage.toLocaleString()} miles</p>
-      
-      <div class="car-price-row">
-        <span class="car-price" aria-label="Down payment amount" aria-live="polite">${downPaymentText} down</span>
-        ${car.dealRating && car.dealRating !== 'No Price Analysis' ?
-            `<span class="deal-badge ${dealClass}"><span class="dot"></span>${car.dealRating}</span>` : ''}
-      </div>
-      
-      <p class="car-monthly">$${monthlyPayment.toLocaleString()}/mo est.</p>
-      
-      <div class="car-location-row">
-        <p class="car-location">${car.location.city}, ${car.location.state}</p>
-        <p class="car-distance">${car.location.distance?.toFixed(0) || '25'} mi away</p>
-      </div>
-      
-      <button class="btn-get-price" onclick="event.stopPropagation(); requestInfo(${car.id}, '${car.dealer.name}')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-        </svg>
-        Chat Now
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
       </button>
     </div>
   `;
@@ -447,22 +410,26 @@ function openChat(carId, dealerName) {
 // Helper for Category Cards
 function selectBodyType(type) {
     const filterBody = document.getElementById('filter-body');
-    // If clicking the same type, toggle off
-    if (filterBody.value.toLowerCase().includes(type.toLowerCase())) {
+    // If clicking the same type, toggle off (unless it's 'All' which is empty string)
+    if (type !== '' && filterBody.value.toLowerCase().includes(type.toLowerCase())) {
         filterBody.value = '';
-        document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.cat-pill').forEach(c => c.classList.remove('active'));
+        // Highlight 'All'
+        document.querySelectorAll('.cat-pill')[0].classList.add('active');
     } else {
         filterBody.value = type;
-        document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
-        // Find the button that was clicked (approximate since we pass string)
-        const cards = document.querySelectorAll('.category-card');
-        for (const card of cards) {
-            if (card.innerText.includes(type)) {
-                card.classList.add('active');
+        document.querySelectorAll('.cat-pill').forEach(c => c.classList.remove('active'));
+        // Find the button that was clicked
+        const pills = document.querySelectorAll('.cat-pill');
+        for (const pill of pills) {
+            const label = pill.querySelector('.cat-pill-label').innerText;
+            if (label.includes(type) || (type === '' && label === 'All')) {
+                pill.classList.add('active');
             }
         }
     }
     applyFilters();
 }
+
 
 

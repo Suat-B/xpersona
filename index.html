@@ -3,200 +3,101 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>xpersona - Premium Used Car Marketplace</title>
-  <meta name="description"
-    content="Find your perfect used car from over 2,000 listings. Great deals on Toyota, Ford, Chevrolet, BMW, and more.">
-  <link rel="stylesheet" href="index.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>xpersona - Premium Marketplace</title>
+  <link rel="stylesheet" href="index-modern.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <!-- Header -->
-  <header class="header" id="header">
-    <div class="header-left">
-      <a href="index.html" class="logo">xpersona</a>
-      <nav class="nav">
-        <a href="#" class="nav-link active">Buy</a>
-        <a href="#" class="nav-link">Sell</a>
-        <a href="#" class="nav-link">Finance</a>
-        <a href="#" class="nav-link">Research</a>
-      </nav>
-    </div>
+
+  <!-- Fixed Header -->
+  <header class="header">
+    <a href="index.html" class="logo">xpersona</a>
     <div class="header-right">
-      <a href="login.html" class="btn btn-outline">Sign In</a>
+      <a href="login.html" style="font-size: 14px; font-weight: 600; color: var(--accent);">Sign In</a>
     </div>
   </header>
 
-  <!-- Search Section -->
-  <section class="search-section">
-    <div class="search-container">
-      <div class="search-bar">
-        <div class="search-input-wrapper">
-          <span class="search-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-          </span>
-          <input type="text" id="search-input" class="search-input"
-            placeholder='Try "5k down" or "under 20000" or "BMW SUV"...'>
-        </div>
-        <button id="search-btn" class="btn btn-primary">Search</button>
-      </div>
-      <!-- Quick Categories -->
-      <div class="category-grid">
-        <button class="category-card" onclick="selectBodyType('SUV')">
-          <span class="category-icon">🚙</span>
-          <span class="category-name">SUV</span>
-        </button>
-        <button class="category-card" onclick="selectBodyType('Sedan')">
-          <span class="category-icon">🚗</span>
-          <span class="category-name">Sedan</span>
-        </button>
-        <button class="category-card" onclick="selectBodyType('Truck')">
-          <span class="category-icon">🛻</span>
-          <span class="category-name">Truck</span>
-        </button>
-        <button class="category-card" onclick="selectBodyType('Coupe')">
-          <span class="category-icon">🏎️</span>
-          <span class="category-name">Coupe</span>
-        </button>
-        <button class="category-card" onclick="selectBodyType('Luxury')">
-          <span class="category-icon">💎</span>
-          <span class="category-name">Luxury</span>
-        </button>
-        <button class="category-card" onclick="selectBodyType('Electric')">
-          <span class="category-icon">⚡</span>
-          <span class="category-name">Electric</span>
-        </button>
-      </div>
-
-      <div class="filters-row">
-        <select id="filter-make" class="filter-select">
-          <option value="">All Makes</option>
-        </select>
-        <select id="filter-model" class="filter-select">
-          <option value="">All Models</option>
-        </select>
-        <select id="filter-year" class="filter-select">
-          <option value="">All Years</option>
-        </select>
-        <select id="filter-price" class="filter-select">
-          <option value="">Any Price</option>
-          <option value="0-10000">Under $10,000</option>
-          <option value="10000-20000">$10,000 - $20,000</option>
-          <option value="20000-30000">$20,000 - $30,000</option>
-          <option value="30000-50000">$30,000 - $50,000</option>
-          <option value="50000-100000">$50,000 - $100,000</option>
-          <option value="100000-999999">$100,000+</option>
-        </select>
-        <select id="filter-body" class="filter-select">
-          <option value="">All Body Types</option>
-          <option value="sedan">Sedan</option>
-          <option value="suv">SUV / Crossover</option>
-          <option value="truck">Pickup Truck</option>
-          <option value="coupe">Coupe</option>
-          <option value="wagon">Wagon</option>
-          <option value="van">Van / Minivan</option>
-          <option value="convertible">Convertible</option>
-        </select>
-        <div class="filter-tags">
-          <button class="filter-tag active" data-filter="all">All Cars</button>
-          <button class="filter-tag" data-filter="Great Deal">Great Deals</button>
-          <button class="filter-tag" data-filter="Electric">Electric</button>
-          <button class="filter-tag" data-filter="Hybrid">Hybrid</button>
-        </div>
-      </div>
+  <!-- Sticky Search Bar -->
+  <div class="mobile-search-wrapper">
+    <div class="search-input-group">
+      <input type="text" id="search-input" class="search-input-modern" placeholder="Search cars..." autocomplete="off">
+      <button id="search-btn" class="search-btn-modern">Go</button>
     </div>
-  </section>
+    <!-- Hidden but functional filters for app.js compatibility -->
+    <div style="display:none;">
+      <select id="filter-make"></select>
+      <select id="filter-model"></select>
+      <select id="filter-year"></select>
+      <select id="filter-price"></select>
+      <select id="filter-body"></select>
+      <select id="sort-select"></select>
+    </div>
+  </div>
 
-  <!-- Results Section -->
-  <section class="results-section">
-    <div class="results-header">
-      <p class="results-count">Showing <span id="showing-count">0</span> of <span id="total-count">0</span> cars</p>
-      <select id="sort-select" class="sort-select">
-        <option value="best">Best Match</option>
-        <option value="price-asc">Price: Low to High</option>
-        <option value="price-desc">Price: High to Low</option>
-        <option value="mileage">Lowest Mileage</option>
-        <option value="year">Newest Year</option>
-      </select>
+  <!-- Horizontal Category Scroll -->
+  <div class="category-scroll-container">
+    <div class="cat-pill active" onclick="selectBodyType('')">
+      <span class="cat-pill-icon">🔥</span>
+      <span class="cat-pill-label">All</span>
+    </div>
+    <div class="cat-pill" onclick="selectBodyType('SUV')">
+      <span class="cat-pill-icon">🚙</span>
+      <span class="cat-pill-label">SUV</span>
+    </div>
+    <div class="cat-pill" onclick="selectBodyType('Sedan')">
+      <span class="cat-pill-icon">🚗</span>
+      <span class="cat-pill-label">Sedan</span>
+    </div>
+    <div class="cat-pill" onclick="selectBodyType('Truck')">
+      <span class="cat-pill-icon">🛻</span>
+      <span class="cat-pill-label">Truck</span>
+    </div>
+    <div class="cat-pill" onclick="selectBodyType('Coupe')">
+      <span class="cat-pill-icon">🏎️</span>
+      <span class="cat-pill-label">Coupe</span>
+    </div>
+    <div class="cat-pill" onclick="selectBodyType('Luxury')">
+      <span class="cat-pill-icon">💎</span>
+      <span class="cat-pill-label">Luxury</span>
+    </div>
+    <div class="cat-pill" onclick="selectBodyType('Electric')">
+      <span class="cat-pill-icon">⚡</span>
+      <span class="cat-pill-label">Electric</span>
+    </div>
+  </div>
+
+  <!-- Main Feed -->
+  <main class="results-section">
+    <div class="section-header"
+      style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; padding: 0 4px;">
+      <span id="showing-count"
+        style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Loading...</span>
     </div>
 
-    <!-- Loading State -->
-    <div id="loading" class="loading">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">Loading cars...</p>
+    <div id="car-grid" class="car-grid">
+      <!-- Cars injected here -->
     </div>
 
-    <!-- Car Grid -->
-    <div id="car-grid" class="car-grid"></div>
-
-    <!-- Empty State -->
-    <div id="empty-state" class="empty-state" style="display: none;">
-      <div class="empty-icon">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
-          <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-          <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-          <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6" />
-          <path d="M15 6l1.5 5" />
-        </svg>
+    <!-- Loading / Infinite Scroll -->
+    <div id="scroll-loader" style="padding: 24px; text-align: center; display: none;">
+      <div class="loading-spinner"
+        style="width: 24px; height: 24px; border: 2px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;">
       </div>
-      <h3 class="empty-title">No cars found</h3>
-      <p class="empty-subtitle">Try adjusting your filters or search terms</p>
     </div>
 
-    <!-- Infinite Scroll Loader -->
-    <div id="scroll-loader" class="scroll-loader" style="display: none;">
-      <div class="loading-spinner"></div>
+    <div id="empty-state" style="text-align: center; padding: 40px; display: none;">
+      <h3>No matches found</h3>
+      <p style="color: #666;">Try adjusting your search</p>
     </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-section">
-        <h4>For Buyers</h4>
-        <ul class="footer-links">
-          <li><a href="#">Search Cars</a></li>
-          <li><a href="#">Car Reviews</a></li>
-          <li><a href="#">Compare Prices</a></li>
-          <li><a href="#">Financing</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4>For Sellers</h4>
-        <ul class="footer-links">
-          <li><a href="#">Sell Your Car</a></li>
-          <li><a href="#">Dealer Solutions</a></li>
-          <li><a href="#">Advertising</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4>Company</h4>
-        <ul class="footer-links">
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Contact</a></li>
-          <li><a href="#">Press</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4>Legal</h4>
-        <ul class="footer-links">
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Cookie Policy</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2024 xpersona. All rights reserved.</p>
-    </div>
-  </footer>
+  </main>
 
   <script src="app.js"></script>
+  <script>
+    // Inline TikTok Redirect for any static elements
+    const TIKTOK_URL = 'https://www.tiktok.com/@suat6690';
+  </script>
 </body>
 
 </html>

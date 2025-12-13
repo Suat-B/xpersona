@@ -1,0 +1,292 @@
+/* ========================================
+   xpersona - Modern Mobile-First Feed (Craigslist Philosophy)
+   Efficient, Dense, Accessible, Fast
+   ======================================== */
+
+/* ========== CSS Variables ========== */
+:root {
+    --bg-app: #f2f4f6;
+    --bg-card: #ffffff;
+    --bg-header: rgba(255, 255, 255, 0.95);
+
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+
+    --border: #e5e7eb;
+
+    --mobile-header-height: 60px;
+    --search-bar-height: 50px;
+}
+
+/* ========== Global Reset Overrides ========== */
+body {
+    background: var(--bg-app);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding-top: var(--mobile-header-height);
+    /* Make room for fixed header */
+}
+
+/* ========== Sticky Header (Mobile App Style) ========== */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--mobile-header-height);
+    background: var(--bg-header);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.logo {
+    font-size: 1.25rem;
+    letter-spacing: -0.5px;
+}
+
+/* ========== Sticky Search Bar ========== */
+.mobile-search-wrapper {
+    position: sticky;
+    top: var(--mobile-header-height);
+    z-index: 900;
+    background: var(--bg-app);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 8px;
+    background: white;
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border);
+}
+
+.search-input-modern {
+    flex: 1;
+    border: none;
+    padding: 10px 12px;
+    font-size: 16px;
+    /* Prevents iOS zoom */
+    outline: none;
+    background: transparent;
+}
+
+.search-btn-modern {
+    background: var(--text-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* ========== Horizontal Category Scroll (Feed Style) ========== */
+.category-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding: 4px 16px 16px 16px;
+    scrollbar-width: none;
+    /* Hide scrollbar Firefox */
+    -ms-overflow-style: none;
+    /* Hide scrollbar IE */
+    background: var(--bg-app);
+    position: relative;
+    z-index: 800;
+}
+
+.category-scroll-container::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar Chrome/Safari */
+}
+
+.cat-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 72px;
+    padding: 12px 8px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.2s;
+    flex-shrink: 0;
+}
+
+.cat-pill:active {
+    transform: scale(0.96);
+}
+
+.cat-pill.active {
+    background: var(--text-primary);
+    color: white;
+    border-color: var(--text-primary);
+}
+
+.cat-pill-icon {
+    font-size: 24px;
+}
+
+.cat-pill-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* ========== Feed Grid (Craigslist Efficiency) ========== */
+.results-section {
+    padding: 0 16px 80px 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.car-grid {
+    display: grid;
+    gap: 16px;
+    /* Mobile default: 1 col */
+    grid-template-columns: 1fr;
+}
+
+.car-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.car-image-wrapper {
+    aspect-ratio: 16/10;
+    background: #eee;
+    position: relative;
+}
+
+.car-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.car-content {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Craigslist-style high-density info */
+.car-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.car-title-modern {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin: 0;
+}
+
+.car-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.meta-dot {
+    width: 3px;
+    height: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+}
+
+.car-price-large {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 4px;
+}
+
+.down-payment-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.btn-action-feed {
+    margin-top: 10px;
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-app);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-action-feed:active {
+    background: #e5e7eb;
+}
+
+/* ========== Desktop Enhancements ========== */
+@media (min-width: 768px) {
+    .car-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+
+    .mobile-search-wrapper {
+        position: relative;
+        top: 0;
+        background: transparent;
+        padding: 0;
+        margin-bottom: 24px;
+    }
+
+    .search-input-group {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .category-scroll-container {
+        justify-content: center;
+        overflow-x: visible;
+        flex-wrap: wrap;
+        background: transparent;
+    }
+
+    .cat-pill {
+        min-width: 90px;
+        padding: 16px 12px;
+    }
+}
