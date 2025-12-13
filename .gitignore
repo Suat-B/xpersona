@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Checkpoint files (we want fresh scrapes)
+scrape_checkpoint*.json
+
+# Environment
+.env
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
