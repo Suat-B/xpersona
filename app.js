@@ -443,7 +443,26 @@ function openChat(carId, dealerName) {
     window.open(TIKTOK_URL, '_blank');
 }
 
-function requestInfo(carId, dealerName) {
-    window.open(TIKTOK_URL, '_blank');
+
+// Helper for Category Cards
+function selectBodyType(type) {
+    const filterBody = document.getElementById('filter-body');
+    // If clicking the same type, toggle off
+    if (filterBody.value.toLowerCase().includes(type.toLowerCase())) {
+        filterBody.value = '';
+        document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
+    } else {
+        filterBody.value = type;
+        document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
+        // Find the button that was clicked (approximate since we pass string)
+        const cards = document.querySelectorAll('.category-card');
+        for (const card of cards) {
+            if (card.innerText.includes(type)) {
+                card.classList.add('active');
+            }
+        }
+    }
+    applyFilters();
 }
+
 
