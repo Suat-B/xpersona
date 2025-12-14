@@ -9,7 +9,7 @@ let displayedCount = 0;
 const batchSize = 24;
 let isLoading = false;
 let favorites = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
-const DOWN_PAYMENT_PERCENT = 0.1;
+const DOWN_PAYMENT_PERCENT = 0.15;
 
 // DOM Elements
 const carGrid = document.getElementById('car-grid');
@@ -371,42 +371,56 @@ function createCarCardHTML(car) {
     const isFav = favorites.has(car.id);
     const dealClass = (car.dealRating || '').toLowerCase().replace(' ', '-');
 
+    // Down Payment Calculation (15%)
+    const downPaymentAmount = Math.round(car.price * DOWN_PAYMENT_PERCENT);
+    const downPaymentText = formatCurrencyWhole(downPaymentAmount);
+
     // Safety check for location
     const city = car.location?.city || 'Unknown';
     const state = car.location?.state || '';
     const distance = car.location?.distance ? Math.round(car.location.distance) : 0;
 
-    const monthlyPayment = Math.round((car.price * 1.07) / 60);
+    // Monthly Est (Remaining balance over 60mo @ 7%)
+    const monthlyPayment = Math.round(((car.price - downPaymentAmount) * 1.07) / 60);
 
     return `
     <div class="car-image-wrapper">
       <img src="${car.imageUrl}" alt="${car.year} ${car.make} ${car.model}" class="car-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800'">
+      
+      <div class="card-badges">
+         ${car.dealRating && car.dealRating !== 'No Price Analysis' ?
+            `<span class="deal-badge-float ${dealClass}">${car.dealRating}</span>` : ''}
+      </div>
+
       <button class="car-favorite ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${car.id}, this)">
-        <svg viewBox="0 0 24 24" fill="${isFav ? '#ff4444' : 'none'}" stroke="${isFav ? '#ff4444' : '#666'}" stroke-width="2">
+        <svg viewBox="0 0 24 24" fill="${isFav ? '#ff4444' : 'none'}" stroke="${isFav ? '#ff4444' : '#ffffff'}" stroke-width="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
       </button>
     </div>
     <div class="car-content">
-      <h3 class="car-title">${car.year} ${car.make} ${car.model}</h3>
-      <p class="car-subtitle">${car.trim || ''} ${car.bodyType ? '• ' + car.bodyType : ''}</p>
+      <div class="car-header-row">
+          <h3 class="car-title">${car.year} ${car.make} ${car.model}</h3>
+      </div>
+      <p class="car-subtitle">${car.trim || ''} • ${Math.round(car.mileage / 1000)}k miles</p>
       
-      <div class="car-price-row">
-        <span class="car-price">$${car.price.toLocaleString()}</span>
-        ${car.dealRating && car.dealRating !== 'No Price Analysis' ?
-            `<span class="deal-badge ${dealClass}"><span class="dot"></span>${car.dealRating}</span>` : ''}
+      <div class="car-price-block">
+        <div class="down-payment-row">
+            <span class="down-label">down</span>
+            <span class="down-price">${downPaymentText}</span>
+        </div>
+        <div class="monthly-payment-row">
+            <span class="monthly-val">$${monthlyPayment}/mo</span>
+            <span class="full-price-muted">Cash: $${car.price.toLocaleString()}</span>
+        </div>
       </div>
       
-      <p class="car-monthly">$${monthlyPayment.toLocaleString()}/mo est.</p>
-      
-      <div class="car-location-row">
-        <span class="car-location">${city}, ${state}</span>
-        <span class="car-distance">${distance} mi</span>
+      <div class="car-footer-row">
+        <span class="car-location-sm">${city}, ${state}</span>
+        <button class="btn-clean-action" onclick="event.stopPropagation(); window.location.href='details.html?id=${car.id}'">
+          View
+        </button>
       </div>
-      
-      <button class="btn-get-price" onclick="event.stopPropagation(); window.location.href='details.html?id=${car.id}'">
-        Check Availability
-      </button>
     </div>
   `;
 }

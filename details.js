@@ -62,8 +62,26 @@ function renderCarDetails() {
 
     // Price
     const priceEl = document.getElementById('car-price');
+
+    // Down Payment Logic (15%)
+    const downPaymentAmount = Math.round(price * 0.15);
+    const downPaymentText = `$${downPaymentAmount.toLocaleString()}`;
+
     if (priceEl) {
-        priceEl.textContent = `$${price.toLocaleString()}`;
+        // We are hijacking the existing 'car-price' element to inject the new structure
+        // ideally we would change the HTML structure but this is faster if we are careful
+
+        // Find parent container to manipulate structure if needed
+        const priceDisplay = priceEl.closest('.price-display');
+        if (priceDisplay) {
+            const label = priceDisplay.querySelector('.price-label');
+            if (label) label.textContent = 'Estimated Down Payment';
+
+            priceEl.textContent = downPaymentText;
+
+            const subText = priceDisplay.querySelector('.price-full');
+            if (subText) subText.textContent = `Cash Price: $${price.toLocaleString()}`;
+        }
     }
 
     // Deal Rating Logic

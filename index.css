@@ -303,110 +303,147 @@ button {
 }
 
 
+/* Content Layout (Down Payment Centric) */
 .car-content {
   padding: 16px;
-  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
+.car-header-row {
+  margin-bottom: 4px;
+}
+
 .car-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 4px;
-  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0;
 }
 
 .car-subtitle {
   font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-}
-
-.car-price-row {
-  margin-top: auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-light);
-}
-
-.car-price {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.deal-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.deal-badge.great-deal {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.deal-badge.good-deal {
-  background: #f0fdf4;
-  color: #15803d;
-}
-
-.deal-badge.fair-deal {
-  background: #fff7ed;
-  color: #9a3412;
-}
-
-.deal-badge .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-
-.car-monthly {
-  font-size: 0.85rem;
   color: var(--text-muted);
-  font-weight: 500;
-  margin-top: 4px;
+  margin-bottom: 16px;
 }
 
-.car-location-row {
-  margin-top: 8px;
+/* Price Block */
+.car-price-block {
+  margin-bottom: 20px;
+}
+
+.down-payment-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.down-label {
+  background: var(--text-primary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.down-price {
+  font-size: 1.5rem;
+  /* Big impact */
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.monthly-payment-row {
+  display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+.monthly-val {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.full-price-muted {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
 
-.btn-get-price {
-  margin-top: 16px;
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: var(--transition);
+/* Footer Row */
+.car-footer-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
 }
 
-.btn-get-price:hover {
-  background: #000;
-  color: white;
+.car-location-sm {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+}
+
+.btn-clean-action {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: opacity 0.2s;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.btn-clean-action:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--text-primary);
+}
+
+/* Badges */
+.card-badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.deal-badge-float {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+
+.deal-badge-float.great-deal {
+  color: var(--success);
+}
+
+.deal-badge-float.good-deal {
+  color: var(--success);
+}
+
+.deal-badge-float.fair-deal {
+  color: var(--warning);
 }
 
 /* ========== Loading & Empty States ========== */
