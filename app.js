@@ -406,8 +406,8 @@ function createCarCardHTML(car) {
       
       <div class="car-price-block">
         <div class="down-payment-row">
-            <span class="down-label">down</span>
             <span class="down-price">${downPaymentText}</span>
+            <span class="down-label">down</span>
         </div>
         <div class="monthly-payment-row">
             <span class="monthly-val">$${monthlyPayment}/mo</span>
