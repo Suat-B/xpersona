@@ -3,91 +3,68 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Details - xpersona</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vehicle Details | xpersona</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="details-modern.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body class="details-body">
-    <!-- Ambient Background -->
-    <div class="ambient-bg">
-        <div class="ambient-orb ambient-orb-1"></div>
-        <div class="ambient-orb ambient-orb-2"></div>
-        <div class="ambient-orb ambient-orb-3"></div>
-    </div>
-
     <!-- Header -->
     <header class="header header-glass" id="header">
-        <div class="header-left">
-            <a href="index.html" class="logo">
-                <span class="logo-icon">✦</span>
-                xpersona
-            </a>
-            <nav class="nav">
-                <a href="index.html" class="nav-link">Buy</a>
-                <a href="#" class="nav-link">Sell</a>
-                <a href="#" class="nav-link">Finance</a>
-                <a href="#" class="nav-link">Research</a>
-            </nav>
-        </div>
+        <a href="index.html" class="logo">
+            <span class="logo-text">xpersona</span>
+        </a>
+        <nav class="nav">
+            <a href="index.html" class="nav-link">Inventory</a>
+            <a href="#" class="nav-link" id="contact-nav">Contact</a>
+        </nav>
         <div class="header-right">
-            <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
-                <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <circle cx="12" cy="12" r="5" />
-                    <path
-                        d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                </svg>
-                <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                </svg>
+            <button class="btn-glass" id="theme-toggle" style="display:none;">
+                Theme
             </button>
-            <a href="login.html" class="btn btn-glass">Sign In</a>
+            <a href="login.html" class="btn-primary-action"
+                style="padding: 8px 16px; font-size: 0.9rem; width: auto;">Sign In</a>
         </div>
     </header>
 
     <!-- Details Page -->
     <main class="details-main">
         <!-- Breadcrumb -->
-        <div class="breadcrumb">
+        <nav class="breadcrumb">
             <a href="index.html" class="breadcrumb-link">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M15 18l-6-6 6-6" />
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
-                Back to listings
+                Back to Inventory
             </a>
             <div class="breadcrumb-trail">
                 <span>Home</span>
-                <span class="breadcrumb-sep">›</span>
-                <span>Used Cars</span>
-                <span class="breadcrumb-sep">›</span>
-                <span class="breadcrumb-current" id="breadcrumb-title">Loading...</span>
+                <span class="breadcrumb-sep">/</span>
+                <span>Inventory</span>
+                <span class="breadcrumb-sep">/</span>
+                <span class="breadcrumb-current" id="breadcrumb-model">Details</span>
             </div>
-        </div>
+        </nav>
 
         <div class="details-layout">
             <!-- Left Column: Gallery & Info -->
             <div class="details-content">
-                <!-- Hero Gallery -->
-                <section class="gallery-hero">
+                <!-- Gallery Section -->
+                <div class="gallery-hero">
                     <div class="gallery-main-wrapper">
-                        <img id="main-image" class="gallery-main-image" src="" alt="Car image">
-
-                        <!-- Gallery Overlay Controls -->
+                        <img src="" alt="Vehicle Image" class="gallery-main-image" id="main-image">
                         <div class="gallery-overlay">
-                            <span class="gallery-deal-badge" id="gallery-badge"></span>
+                            <div class="gallery-deal-badge" id="gallery-deal-badge">Great Deal</div>
                             <div class="gallery-nav">
-                                <button class="gallery-nav-btn prev" id="gallery-prev">
+                                <button class="gallery-nav-btn prev" onclick="prevImage()">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path d="M15 18l-6-6 6-6" />
                                     </svg>
                                 </button>
-                                <button class="gallery-nav-btn next" id="gallery-next">
+                                <button class="gallery-nav-btn next" onclick="nextImage()">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path d="M9 18l6-6-6-6" />
@@ -95,46 +72,36 @@
                                 </button>
                             </div>
                             <div class="gallery-actions">
-                                <button class="gallery-action-btn">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <polyline points="1 4 1 10 7 10" />
-                                        <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
-                                    </svg>
-                                    360°
-                                </button>
-                                <button class="gallery-action-btn" id="photo-count-btn">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <polyline points="21 15 16 10 5 21" />
-                                    </svg>
-                                    <span id="total-photos">1</span> Photos
-                                </button>
                                 <button class="gallery-action-btn favorite-btn" id="favorite-btn">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <path
-                                            d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                                     </svg>
                                     Save
+                                </button>
+                                <button class="gallery-action-btn" onclick="shareCar()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                        <polyline points="16 6 12 2 8 6" />
+                                        <line x1="12" y1="2" x2="12" y2="15" />
+                                    </svg>
+                                    Share
                                 </button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Thumbnail Strip -->
                     <div class="gallery-thumbs-wrapper">
                         <div class="gallery-thumbs" id="gallery-thumbs">
-                            <!-- Thumbnails generated dynamically -->
+                            <!-- Thumbnails injected by JS -->
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <!-- Quick Stats Bar -->
-                <section class="quick-stats">
-                    <div class="quick-stat" data-tooltip="Total miles driven">
+                <!-- Quick Stats -->
+                <div class="quick-stats">
+                    <div class="quick-stat">
                         <div class="quick-stat-icon">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
@@ -144,244 +111,192 @@
                         </div>
                         <div class="quick-stat-content">
                             <span class="quick-stat-value" id="stat-mileage">--</span>
-                            <span class="quick-stat-label">Miles</span>
+                            <span class="quick-stat-label">Mileage</span>
                         </div>
                     </div>
-                    <div class="quick-stat" data-tooltip="Drivetrain type">
+                    <!-- Add more stats via JS if needed or static here -->
+                    <div class="quick-stat">
                         <div class="quick-stat-icon">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <circle cx="12" cy="12" r="3" />
-                                <path
-                                    d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+                                <path d="M3 3v18h18" />
+                                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
                             </svg>
                         </div>
                         <div class="quick-stat-content">
-                            <span class="quick-stat-value" id="stat-drivetrain">--</span>
-                            <span class="quick-stat-label">Drivetrain</span>
-                        </div>
-                    </div>
-                    <div class="quick-stat" data-tooltip="Fuel type">
-                        <div class="quick-stat-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="12" y1="18" x2="12" y2="12" />
-                                <line x1="9" y1="15" x2="15" y2="15" />
-                            </svg>
-                        </div>
-                        <div class="quick-stat-content">
-                            <span class="quick-stat-value" id="stat-fuel">--</span>
-                            <span class="quick-stat-label">Fuel</span>
-                        </div>
-                    </div>
-                    <div class="quick-stat" data-tooltip="Transmission type">
-                        <div class="quick-stat-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                                <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
-                            </svg>
-                        </div>
-                        <div class="quick-stat-content">
-                            <span class="quick-stat-value" id="stat-transmission">--</span>
+                            <span class="quick-stat-value" id="stat-transmission">Auto</span>
                             <span class="quick-stat-label">Transmission</span>
                         </div>
                     </div>
-                </section>
+                    <div class="quick-stat">
+                        <div class="quick-stat-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 2.69l5.74 5.88-5.74 5.88-5.74-5.88z" />
+                                <path d="M12 2.69v11.76" />
+                            </svg>
+                        </div>
+                        <div class="quick-stat-content">
+                            <span class="quick-stat-value" id="stat-drivetrain">AWD</span>
+                            <span class="quick-stat-label">Drivetrain</span>
+                        </div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <line x1="12" y1="8" x2="12" y2="16" />
+                                <line x1="8" y1="12" x2="16" y2="12" />
+                            </svg>
+                        </div>
+                        <div class="quick-stat-content">
+                            <span class="quick-stat-value" id="stat-engine">V6</span>
+                            <span class="quick-stat-label">Engine</span>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Features Section -->
-                <section class="info-section">
+                <div class="info-section">
                     <div class="section-header">
                         <h2 class="section-title-modern">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-                                <polyline points="22 4 12 14.01 9 11.01" />
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                             </svg>
                             Key Features
                         </h2>
                     </div>
                     <div class="features-modern" id="features-grid">
-                        <!-- Features will be generated -->
+                        <!-- Features injected by JS -->
                     </div>
-                </section>
+                </div>
 
-                <!-- Specifications Section -->
-                <section class="info-section">
+                <!-- Specs Section -->
+                <div class="info-section">
                     <div class="section-header">
                         <h2 class="section-title-modern">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                <line x1="3" y1="9" x2="21" y2="9" />
-                                <line x1="9" y1="21" x2="9" y2="9" />
+                                <circle cx="12" cy="12" r="3" />
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                             </svg>
-                            Complete Specifications
+                            Specifications
                         </h2>
                     </div>
-                    <div class="specs-grid" id="overview-grid">
-                        <!-- Specs will be generated -->
+                    <div class="specs-grid" id="specs-grid">
+                        <!-- Specs injected by JS -->
                     </div>
-                </section>
+                </div>
 
-                <!-- Finance Section -->
-                <section class="finance-card" id="finance-section">
+                <!-- Finance Promo (White Theme) -->
+                <div class="finance-card">
                     <div class="finance-header">
                         <div class="finance-icon-wrapper">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <rect x="2" y="5" width="20" height="14" rx="2" />
-                                <line x1="2" y1="10" x2="22" y2="10" />
+                                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                             </svg>
                         </div>
                         <div class="finance-header-text">
-                            <h3>Pre-Qualify for Financing</h3>
-                            <p>Get personalized rates in minutes</p>
+                            <h3>Personalized Financing</h3>
+                            <p>Get pre-qualified in minutes without impacting your credit score.</p>
                         </div>
                     </div>
-                    <div class="finance-benefits-modern">
-                        <div class="finance-benefit-modern">
-                            <div class="benefit-check">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="3">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                            </div>
-                            <span>No impact on credit score</span>
-                        </div>
-                        <div class="finance-benefit-modern">
-                            <div class="benefit-check">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="3">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                            </div>
-                            <span>Real rates from top lenders</span>
-                        </div>
-                        <div class="finance-benefit-modern">
-                            <div class="benefit-check">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="3">
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                            </div>
-                            <span>Complete in 2 minutes</span>
-                        </div>
-                    </div>
-                    <button class="btn-finance-cta">
-                        Get Pre-Qualified
+                    <button class="btn-finance-cta" onclick="scrollToFinance()">
+                        Check Your Rate
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                            <polyline points="12 5 19 12 12 19" />
+                            <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </button>
-                </section>
+                </div>
+
             </div>
 
-            <!-- Right Column: Sticky Sidebar -->
+            <!-- Right Column: Sidebar -->
             <aside class="details-sidebar">
                 <div class="sidebar-sticky">
                     <!-- Price Card -->
                     <div class="price-card">
                         <div class="price-card-header">
                             <h1 class="car-name" id="car-title">Loading...</h1>
-                            <p class="car-location-text" id="car-location">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            <div class="car-location-text">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                                     <circle cx="12" cy="10" r="3" />
                                 </svg>
-                                <span>Loading...</span>
-                            </p>
-                        </div>
-
-                        <div class="price-display" id="car-price">
-                            <div class="price-main">
-                                <span class="price-label">Down Payment</span>
-                                <span class="price-amount">$--</span>
+                                <span id="car-location">--</span>
                             </div>
-                            <div class="price-full">Full Price: $--</div>
                         </div>
 
-                        <div class="deal-indicator" id="deal-badge">
-                            <span class="deal-dot"></span>
-                            <span class="deal-rating" id="deal-text">Analyzing...</span>
+                        <div class="price-display">
+                            <div class="price-main">
+                                <span class="price-label">LIST PRICE</span>
+                                <span class="price-amount" id="car-price">--</span>
+                            </div>
+                            <p class="price-full">Does not include tax, title, or fees</p>
                         </div>
 
-                        <p class="market-note" id="market-comparison"></p>
+                        <div class="deal-indicator">
+                            <div class="deal-dot"></div>
+                            <span class="deal-rating" id="deal-rating-text">Great Deal</span>
+                        </div>
+                        <p class="market-note" id="market-note">$1,200 below market average</p>
                     </div>
 
-                    <!-- Contact Card -->
+                    <!-- Action Card (Contact) -->
                     <div class="contact-card">
-                        <h3 class="contact-title">Ready to make it yours?</h3>
-
-                        <button class="btn-primary-action" id="chat-btn" onclick="openChat()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                            </svg>
-                            Start Chat with Dealer
+                        <button class="btn-primary-action" onclick="openChat()">
+                            Check Availability
                         </button>
-
                         <div class="contact-buttons">
                             <button class="btn-secondary-action" onclick="callDealer()">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path
-                                        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.86.58 2.81.7A2 2 0 0122 16.92z" />
-                                </svg>
-                                Call
+                                Call Dealer
                             </button>
                             <button class="btn-secondary-action" onclick="scheduleVisit()">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg>
-                                Schedule
+                                Test Drive
                             </button>
                         </div>
                     </div>
 
-                    <!-- Dealer Card -->
+                    <!-- Dealer Info -->
                     <div class="dealer-card">
                         <div class="dealer-header">
                             <div class="dealer-avatar">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                                     <polyline points="9 22 9 12 15 12 15 22" />
                                 </svg>
                             </div>
                             <div class="dealer-details">
                                 <span class="dealer-name" id="dealer-name">Loading...</span>
-                                <span class="dealer-rating" id="dealer-rating">
+                                <div class="dealer-rating">
                                     <span class="stars">★★★★★</span>
-                                    <span class="review-count">(-- reviews)</span>
-                                </span>
+                                    <span class="review-count">(42 reviews)</span>
+                                </div>
                             </div>
                         </div>
                         <div class="dealer-badge">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <polyline points="20 6 9 17 4 12" />
                             </svg>
                             Verified Dealer
                         </div>
                     </div>
 
-                    <!-- Safety Note -->
                     <div class="safety-note">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                         </svg>
-                        <span>Protected by xpersona Buyer Guarantee</span>
+                        Secure transaction via xpersona
                     </div>
                 </div>
             </aside>
@@ -392,68 +307,30 @@
     <footer class="footer-modern">
         <div class="footer-content-modern">
             <div class="footer-brand">
-                <a href="index.html" class="footer-logo">
-                    <span class="logo-icon">✦</span>
-                    xpersona
-                </a>
-                <p class="footer-tagline">Find your perfect car, effortlessly.</p>
+                <div class="footer-logo">
+                    <span class="logo-text">xpersona</span>
+                </div>
+                <p class="footer-tagline">Premium car buying, simplified.</p>
             </div>
-            <div class="footer-links-grid">
-                <div class="footer-section">
-                    <h4>For Buyers</h4>
-                    <ul class="footer-links">
-                        <li><a href="index.html">Search Cars</a></li>
-                        <li><a href="#">Finance</a></li>
-                        <li><a href="#">Compare Prices</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>For Sellers</h4>
-                    <ul class="footer-links">
-                        <li><a href="#">Sell Your Car</a></li>
-                        <li><a href="#">Dealer Solutions</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Company</h4>
-                    <ul class="footer-links">
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Contact</a></li>
-                    </ul>
-                </div>
-            </div>
+
         </div>
         <div class="footer-bottom-modern">
-            <p>© 2024 xpersona. All rights reserved.</p>
+            <p>&copy; 2024 xpersona. All rights reserved.</p>
         </div>
     </footer>
 
     <script src="details.js"></script>
     <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-
-        // Check for saved theme preference
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        body.setAttribute('data-theme', savedTheme);
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
-
         // TikTok redirect URL
         const TIKTOK_URL = 'https://www.tiktok.com/@suat6690';
 
-        // Favorite Button Toggle
-        const favoriteBtn = document.getElementById('favorite-btn');
-        favoriteBtn.addEventListener('click', () => {
-            favoriteBtn.classList.toggle('active');
-        });
+        // Simple theme toggle dummy logic - keeping code but hidden in UI
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                // No-op for enforced white theme
+            });
+        }
 
         function openChat() {
             window.open(TIKTOK_URL, '_blank');

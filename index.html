@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>xpersona - Premium Marketplace</title>
-  <link rel="stylesheet" href="index-modern.css">
+  <link rel="stylesheet" href="index.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
@@ -15,14 +15,15 @@
   <header class="header">
     <a href="index.html" class="logo">xpersona</a>
     <div class="header-right">
-      <a href="login.html" style="font-size: 14px; font-weight: 600; color: var(--accent);">Sign In</a>
+      <a href="login.html">Sign In</a>
     </div>
   </header>
 
   <!-- Sticky Search Bar -->
   <div class="mobile-search-wrapper">
     <div class="search-input-group">
-      <input type="text" id="search-input" class="search-input-modern" placeholder="Search cars..." autocomplete="off">
+      <input type="text" id="search-input" class="search-input-modern" placeholder="Search for your next car..."
+        autocomplete="off">
       <button id="search-btn" class="search-btn-modern">Go</button>
     </div>
     <!-- Hidden but functional filters for app.js compatibility -->
@@ -39,63 +40,61 @@
   <!-- Horizontal Category Scroll -->
   <div class="category-scroll-container">
     <div class="cat-pill active" onclick="selectBodyType('')">
-      <span class="cat-pill-icon">🔥</span>
       <span class="cat-pill-label">All</span>
     </div>
     <div class="cat-pill" onclick="selectBodyType('SUV')">
-      <span class="cat-pill-icon">🚙</span>
       <span class="cat-pill-label">SUV</span>
     </div>
     <div class="cat-pill" onclick="selectBodyType('Sedan')">
-      <span class="cat-pill-icon">🚗</span>
       <span class="cat-pill-label">Sedan</span>
     </div>
     <div class="cat-pill" onclick="selectBodyType('Truck')">
-      <span class="cat-pill-icon">🛻</span>
       <span class="cat-pill-label">Truck</span>
     </div>
     <div class="cat-pill" onclick="selectBodyType('Coupe')">
-      <span class="cat-pill-icon">🏎️</span>
       <span class="cat-pill-label">Coupe</span>
     </div>
     <div class="cat-pill" onclick="selectBodyType('Luxury')">
-      <span class="cat-pill-icon">💎</span>
       <span class="cat-pill-label">Luxury</span>
     </div>
     <div class="cat-pill" onclick="selectBodyType('Electric')">
-      <span class="cat-pill-icon">⚡</span>
       <span class="cat-pill-label">Electric</span>
     </div>
   </div>
 
   <!-- Main Feed -->
   <main class="results-section">
-    <div class="section-header"
-      style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; padding: 0 4px;">
-      <span id="showing-count"
-        style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Loading...</span>
-    </div>
-
     <div id="car-grid" class="car-grid">
       <!-- Cars injected here -->
     </div>
 
     <!-- Loading / Infinite Scroll -->
-    <div id="scroll-loader" style="padding: 24px; text-align: center; display: none;">
+    <div id="scroll-loader" style="padding: 32px; text-align: center; display: none;">
       <div class="loading-spinner"
-        style="width: 24px; height: 24px; border: 2px solid #ddd; border-top-color: #333; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;">
+        style="width: 24px; height: 24px; border-radius: 50%; padding: 2px; border: 2px solid rgba(0,0,0,0.1); border-left-color: #000; animation: spin 0.8s linear infinite; margin: 0 auto;">
       </div>
     </div>
 
-    <div id="empty-state" style="text-align: center; padding: 40px; display: none;">
+    <div id="empty-state" style="text-align: center; padding: 60px 20px; display: none;">
       <h3>No matches found</h3>
-      <p style="color: #666;">Try adjusting your search</p>
+      <p style="color: var(--text-secondary);">Try adjusting your search terms.</p>
     </div>
   </main>
 
+  <footer class="footer-modern">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <a href="#" class="logo" style="margin-bottom: 12px; display: inline-block;">xpersona</a>
+        <p style="font-size: 0.9rem; color: var(--text-secondary);">Premium car buying, simplified.</p>
+      </div>
+    </div>
+    <div class="footer-bottom-modern">
+      <p>© 2024 xpersona. All rights reserved.</p>
+    </div>
+  </footer>
+
   <script src="app.js"></script>
   <script>
-    // Inline TikTok Redirect for any static elements
     const TIKTOK_URL = 'https://www.tiktok.com/@suat6690';
   </script>
 </body>
