@@ -138,20 +138,23 @@ async function loadBookshelf() {
     books.forEach(book => {
         const percent = Math.round((book.progressIndex / book.content.length) * 100) || 0;
         const card = document.createElement('div');
-        card.className = 'book-card';
+        card.className = 'book-item';
         card.innerHTML = `
-            <div class="book-cover">
-                ${book.coverUrl ? `<img src="${book.coverUrl}">` : '📖'}
-                <button class="delete-btn" onclick="event.stopPropagation(); removeBook(${book.id})">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <div class="book-cover-wrap">
+                <button class="delete-action" onclick="event.stopPropagation(); removeBook(${book.id})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
-            </div>
-            <div class="book-info">
-                <div class="book-title">${book.title}</div>
-                <div class="book-meta">${book.author}</div>
-                <div class="book-progress">
-                    <div class="progress-bar" style="width: ${percent}%"></div>
+                <div class="book-cover-color">
+                    <span style="font-size: 2rem;">${book.coverUrl ? '' : '📖'}</span>
+                    ${book.coverUrl ? `<img src="${book.coverUrl}" class="book-cover-img">` : ''}
                 </div>
+                <div class="progress-indicator">
+                    <div class="progress-fill" style="width: ${percent}%"></div>
+                </div>
+            </div>
+            <div class="book-meta">
+                <h3>${book.title}</h3>
+                <p>${book.type ? book.type.split('/')[1].toUpperCase() : 'BOOK'} • ${Math.round(book.content.length / 1000)}k words</p>
             </div>
         `;
         card.onclick = () => openReader(book.id);
@@ -280,14 +283,14 @@ async function openReader(id) {
 
     // Update UI
     document.getElementById('reader-title').textContent = currentBook.title;
-    readerView.classList.add('active');
+    readerView.classList.add('open');
 
     updateDisplay();
 }
 
 function closeReader() {
     stop();
-    readerView.classList.remove('active');
+    readerView.classList.remove('open');
     loadBookshelf(); // Refresh progress bars
 }
 
@@ -353,7 +356,7 @@ function updateDisplay() {
     const mid = word[middle];
     const post = word.slice(middle + 1);
 
-    rsvpWord.innerHTML = `${pre}<span class="highlight">${mid}</span>${post}`;
+    rsvpWord.innerHTML = `${pre}<span class="highlight-char">${mid}</span>${post}`;
 
     // Progress
     const progress = (currentIndex / currentBook.content.length) * 100;
