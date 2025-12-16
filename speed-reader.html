@@ -38,24 +38,30 @@
         body {
             background-color: var(--bg-page);
             font-family: 'Outfit', sans-serif;
-            /* More modern geometric sans */
             margin: 0;
             padding: 0;
             overflow-x: hidden;
             color: var(--text-main);
             height: 100vh;
+            /* Fallback */
+            height: 100dvh;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         /* --- Layout & Navigation --- */
         .layout {
             display: flex;
             height: 100vh;
+            /* Fallback */
+            height: 100dvh;
             overflow: hidden;
         }
 
         .sidebar {
             width: 280px;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.85);
+            /* Slightly more opaque */
             backdrop-filter: blur(12px);
             border-right: 1px solid rgba(0, 0, 0, 0.05);
             display: flex;
@@ -507,7 +513,8 @@
 
             .grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 16px;
+                gap: 12px;
+                /* Tighter gap for small screens */
             }
 
             .page-title {
