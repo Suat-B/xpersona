@@ -125,8 +125,12 @@
             flex: 1;
             position: relative;
             overflow-y: auto;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+            /* Momentum scrolling */
         }
 
         /* --- Header (Mobile) --- */
