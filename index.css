@@ -1158,6 +1158,135 @@ button {
   text-transform: uppercase;
 }
 
+.ai-inline-label {
+  color: var(--text-muted);
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  font-size: 0.76rem;
+}
+
+.ai-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: white;
+  color: var(--text-primary);
+  font-weight: 750;
+  font-size: 0.84rem;
+}
+
+.ai-badge.blue {
+  border-color: rgba(37, 99, 235, 0.25);
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+}
+
+.ai-badge.muted {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.ai-meters {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-meter {
+  display: grid;
+  gap: 6px;
+}
+
+.ai-meter-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 750;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.ai-meter-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.ai-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.95), rgba(17, 17, 17, 0.95));
+}
+
+.ai-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ai-flag {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  background: rgba(220, 38, 38, 0.06);
+  color: #7f1d1d;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+
+.ai-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  background: white;
+}
+
+.ai-action-btn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.ai-action-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.25);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.ai-action-btn.primary {
+  background: #111;
+  color: white;
+  border-color: #111;
+}
+
+.ai-action-btn.primary:hover {
+  background: #000;
+  border-color: #000;
+}
+
+.ai-action-btn.active {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: rgba(37, 99, 235, 0.12);
+}
+
 .ai-brief-value {
   font-size: 1rem;
   font-weight: 750;

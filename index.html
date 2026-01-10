@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>xpersona - AI-First Car Listings</title>
+  <title>xpersona for Dealers - AI Briefs + More Leads</title>
   <style>
     /* Inline minimal CSS for landing page to import minimal resources */
     :root {
@@ -20,6 +20,7 @@
       --radius: 20px;
       --accent: #000000;
       --accent-blue: #2563eb;
+      --danger: #dc2626;
     }
 
     * {
@@ -36,6 +37,11 @@
       flex-direction: column;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
     }
 
     .banner-container {
@@ -71,13 +77,58 @@
       color: #fff;
       display: grid;
       gap: 18px;
-      text-align: center;
+      text-align: left;
+    }
+
+    .nav {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 850;
+      letter-spacing: -0.6px;
+      font-size: 1.1rem;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.10);
+      color: rgba(255, 255, 255, 0.92);
+      font-weight: 650;
+      font-size: 0.9rem;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .nav-link:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.14);
     }
 
     .kicker {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 10px;
       font-size: 0.9rem;
       font-weight: 600;
@@ -104,17 +155,12 @@
       font-size: 1.08rem;
       color: rgba(255, 255, 255, 0.86);
       max-width: 780px;
-      margin: 0 auto;
+      margin: 0;
     }
 
-    .cta-group {
-      display: flex;
-      flex-direction: column;
-      /* Mobile first */
+    .hero-grid {
+      display: grid;
       gap: 16px;
-      width: 100%;
-      max-width: 380px;
-      margin: 8px auto 0;
     }
 
     .btn {
@@ -141,7 +187,24 @@
       -webkit-backdrop-filter: blur(10px);
     }
 
-    .btn-shop {
+    .btn-shop,
+    .btn-ghost {
+      background: #ffffff;
+      color: #111111;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .btn-primary {
       background: #ffffff;
       color: #111111;
       border: 1px solid rgba(255, 255, 255, 0.26);
@@ -156,7 +219,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      justify-content: center;
+      justify-content: flex-start;
       margin-top: 6px;
     }
 
@@ -255,6 +318,212 @@
       line-height: 1.55;
     }
 
+    .hero-card {
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      color: var(--text-primary);
+    }
+
+    .hero-card-title {
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .hero-card-sub {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+      color: rgba(17, 17, 17, 0.65);
+    }
+
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 12px 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      outline: none;
+      transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+      color: var(--text-primary);
+    }
+
+    .textarea {
+      min-height: 86px;
+      resize: vertical;
+    }
+
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+      border-color: rgba(37, 99, 235, 0.45);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .form-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-form {
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 850;
+      font-size: 0.95rem;
+      border: 1px solid rgba(0, 0, 0, 0.10);
+      background: #111;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+    }
+
+    .btn-form:hover {
+      transform: translateY(-1px);
+      background: #000;
+      border-color: #000;
+    }
+
+    .btn-form.secondary {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.20);
+      color: #1d4ed8;
+    }
+
+    .btn-form.secondary:hover {
+      background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(37, 99, 235, 0.35);
+      color: #1d4ed8;
+    }
+
+    .fineprint {
+      color: rgba(17, 17, 17, 0.65);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .quote {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow-sm);
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .quote-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .quote-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.20);
+      color: #1d4ed8;
+      font-weight: 800;
+      font-size: 0.82rem;
+    }
+
+    .quote-body {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+
+    .quote-byline {
+      color: rgba(17, 17, 17, 0.70);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .faq {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    details.faq-item {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow-sm);
+      padding: 14px 16px;
+    }
+
+    summary.faq-q {
+      cursor: pointer;
+      font-weight: 850;
+      letter-spacing: -0.3px;
+      font-size: 1rem;
+      color: var(--text-primary);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    summary.faq-q::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-a {
+      margin-top: 10px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    .footer {
+      padding: 26px 18px;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      color: rgba(17, 17, 17, 0.70);
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
     .demo {
       margin-top: 16px;
       border-radius: var(--radius);
@@ -318,12 +587,6 @@
     }
 
     @media (min-width: 768px) {
-      .cta-group {
-        flex-direction: row;
-        max-width: none;
-        justify-content: center;
-      }
-
       .btn {
         min-width: 200px;
       }
@@ -336,6 +599,17 @@
       .steps {
         grid-template-columns: repeat(3, 1fr);
       }
+
+      .hero-grid {
+        grid-template-columns: 1.25fr 0.9fr;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .split {
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -347,30 +621,80 @@
     <img src="landing_banner.png" alt="Premium Cars" class="banner-image">
     <div class="banner-overlay">
       <div class="hero">
-        <div class="kicker">
-          <span class="kicker-dot"></span>
-          AI-first listing platform
-        </div>
-        <div>
-          <h1>xpersona</h1>
-          <p class="subtitle">Find the right car faster with AI Deal Briefs, natural-language search, and persona-based recommendations.</p>
-        </div>
-
-        <div class="cta-group">
-          <a href="#" class="btn btn-ios">
-            <svg viewBox="0 0 384 512" width="18" height="18" style="fill:white; margin-right:8px;">
-              <path
-                d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 49.7-25.2 68.6 25.8 1.4 53.6-13.6 69.1-31z" />
-            </svg>
-            Download on iOS
-          </a>
-          <a href="shop.html" class="btn btn-shop">Browse Inventory</a>
+        <div class="nav">
+          <div class="nav-left">xpersona</div>
+          <div class="nav-right">
+            <a class="nav-link" href="#dealers">For Dealers</a>
+            <a class="nav-link" href="shop.html">Inventory</a>
+            <a class="nav-link" href="#contact">Contact</a>
+          </div>
         </div>
 
-        <div class="hero-metrics">
-          <span class="metric-pill"><strong>AI Deal Brief</strong> in 5 seconds</span>
-          <span class="metric-pill"><strong>Search</strong> like “5k down SUV”</span>
-          <span class="metric-pill"><strong>Ranked</strong> for your persona</span>
+        <div class="hero-grid">
+          <div>
+            <div class="kicker">
+              <span class="kicker-dot"></span>
+              Dealer partnerships
+            </div>
+            <div style="margin-top: 10px;">
+              <h1>More leads. Better shoppers. Cleaner deals.</h1>
+              <p class="subtitle" style="margin-top: 10px;">xpersona helps dealerships convert high-intent shoppers with AI Deal Briefs, natural-language search, and a premium buying experience that drives partner signups.</p>
+            </div>
+
+            <div class="hero-metrics" style="margin-top: 14px;">
+              <span class="metric-pill"><strong>AI Brief</strong> builds trust fast</span>
+              <span class="metric-pill"><strong>Compare</strong> increases intent</span>
+              <span class="metric-pill"><strong>Persona</strong> ranking boosts relevance</span>
+            </div>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 14px;">
+              <a href="#dealers" class="btn btn-primary">Become a Partner</a>
+              <a href="shop.html" class="btn btn-ghost">See the Inventory UX</a>
+            </div>
+          </div>
+
+          <div class="hero-card" id="dealers">
+            <div class="hero-card-title">Request a dealer partnership</div>
+            <div class="hero-card-sub">Get a quick onboarding call. Tell us your inventory size and what region you sell in.</div>
+            <form id="partner-form">
+              <div class="form-grid">
+                <div class="field">
+                  <div class="label">Dealership name</div>
+                  <input class="input" name="dealership" autocomplete="organization" placeholder="Keating Toyota" required>
+                </div>
+                <div class="field">
+                  <div class="label">Your name</div>
+                  <input class="input" name="name" autocomplete="name" placeholder="Suat" required>
+                </div>
+                <div class="field">
+                  <div class="label">Email</div>
+                  <input class="input" name="email" type="email" autocomplete="email" placeholder="you@dealership.com" required>
+                </div>
+                <div class="field">
+                  <div class="label">Phone</div>
+                  <input class="input" name="phone" autocomplete="tel" placeholder="(555) 555-5555">
+                </div>
+                <div class="field">
+                  <div class="label">Inventory size</div>
+                  <select class="select" name="inventory">
+                    <option value="Under 50">Under 50</option>
+                    <option value="50-200">50–200</option>
+                    <option value="200-600">200–600</option>
+                    <option value="600+">600+</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <div class="label">Notes</div>
+                  <textarea class="textarea" name="notes" placeholder="What makes your store special? Any brands or regions you focus on?"></textarea>
+                </div>
+              </div>
+              <div class="form-actions" id="contact">
+                <button class="btn-form" type="submit">Send partnership request</button>
+                <a class="btn-form secondary" href="shop.html" style="text-align:center;">Preview the shopper experience</a>
+                <div class="fineprint">No spam. We use this only to contact you about partnership setup.</div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -378,74 +702,148 @@
 
   <main class="page">
     <section class="section">
-      <h2 class="section-title">AI Deal Briefs, not just listings</h2>
-      <p class="section-subtitle">Every car gets a fast, readable summary: market context, tradeoffs, and the questions you should ask before you click buy.</p>
+      <h2 class="section-title">Why dealers partner with xpersona</h2>
+      <p class="section-subtitle">We’re building a marketplace that rewards high-quality inventory and transparent pricing. You get better shoppers and a brand-forward placement inside an AI-first experience.</p>
 
       <div class="grid-3">
         <div class="card">
           <div class="card-title">
-            Deal Brief
-            <span class="chip blue">Why this deal?</span>
+            Higher-intent leads
+            <span class="chip blue">Dealer-first</span>
           </div>
-          <p>See the market delta, the reasons behind the rating, and what to watch for—without opening 20 tabs.</p>
+          <p>AI Deal Briefs reduce “window shopping” and push real buyers to contact you with better questions.</p>
         </div>
         <div class="card">
           <div class="card-title">
-            AI Search
-            <span class="chip">Natural language</span>
+            Cleaner conversations
+            <span class="chip">Less friction</span>
           </div>
-          <p>Shop the way you talk. Down payment, budget, body type, fuel—typed in one line.</p>
+          <p>Our flow highlights tradeoffs, market context, and affordability before the shopper reaches your team.</p>
         </div>
         <div class="card">
           <div class="card-title">
-            Persona Match
-            <span class="chip">Ranked for you</span>
+            Partner positioning
+            <span class="chip">Brand lift</span>
           </div>
-          <p>Commuter, family, road-tripper, EV-first—get recommendations based on what you actually care about.</p>
+          <p>We prioritize stores that respond fast, price transparently, and keep listings complete.</p>
         </div>
       </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">Try it in one line</h2>
-      <p class="section-subtitle">These are the kinds of queries xpersona is built to understand.</p>
+      <div class="split">
+        <div>
+          <h2 class="section-title">Dealer tools built into the shopper UX</h2>
+          <p class="section-subtitle">We convert attention into intent by giving buyers clarity: deal quality, affordability, risk flags, and the right questions.</p>
 
-      <div class="demo" role="region" aria-label="AI Search Examples">
-        <div class="demo-row">
-          <span class="demo-pill">Example</span>
-          <code>5k down electric SUV</code>
+          <div class="grid-3" style="margin-top: 16px;">
+            <div class="card">
+              <div class="card-title">AI Deal Brief <span class="chip blue">Trust</span></div>
+              <p>Value score, market context, pros/cons, and risk flags per listing—so buyers arrive educated.</p>
+            </div>
+            <div class="card">
+              <div class="card-title">Compare <span class="chip">Conversion</span></div>
+              <p>Side-by-side comparisons reduce drop-off and make the next step obvious: contact or visit.</p>
+            </div>
+            <div class="card">
+              <div class="card-title">AI Search <span class="chip">Intent</span></div>
+              <p>Natural-language queries (“5k down SUV”) help the right buyer find the right unit fast.</p>
+            </div>
+          </div>
         </div>
-        <div class="demo-row">
-          <span class="demo-pill">Example</span>
-          <code>under 25000 honda 2020</code>
-        </div>
-        <div class="demo-row">
-          <span class="demo-pill">Example</span>
-          <code>bmw coupe below 40k</code>
+
+        <div class="quote">
+          <div class="quote-top">
+            <span class="quote-tag">Partner outcomes</span>
+            <span class="chip">Early access</span>
+          </div>
+          <div class="quote-body">“When shoppers understand why a listing is priced the way it is, the conversation starts at a higher level. That’s what we’re building with xpersona.”</div>
+          <div class="quote-byline">— xpersona partnerships</div>
         </div>
       </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">How it works</h2>
-      <p class="section-subtitle">Simple flow, high signal. You’ll feel the difference in the first session.</p>
+      <h2 class="section-title">How dealer partnership works</h2>
+      <p class="section-subtitle">Fast onboarding. Clear expectations. We want long-term partners, not one-off listings.</p>
 
       <div class="steps">
         <div class="step">
-          <strong>1) Search</strong>
-          <span class="section-subtitle">Type like a human. We parse intent.</span>
+          <strong>1) Apply</strong>
+          <span class="section-subtitle">Tell us your store, region, and inventory size.</span>
         </div>
         <div class="step">
-          <strong>2) Brief</strong>
-          <span class="section-subtitle">Get a clean AI summary per car.</span>
+          <strong>2) Onboard</strong>
+          <span class="section-subtitle">We align on standards: photos, VIN, pricing, response time.</span>
         </div>
         <div class="step">
-          <strong>3) Decide</strong>
-          <span class="section-subtitle">Save, compare, and move fast.</span>
+          <strong>3) Grow</strong>
+          <span class="section-subtitle">We feature high-quality inventory and route high-intent leads to you.</span>
+        </div>
+      </div>
+
+      <div class="faq" style="margin-top: 18px;">
+        <details class="faq-item">
+          <summary class="faq-q">What dealerships are a fit for xpersona?<span class="chip">FAQ</span></summary>
+          <div class="faq-a">Stores that care about a clean listing (photos, VIN, accurate trims) and want educated shoppers. Franchise and independent are both welcome.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">How do you decide what ranks higher?<span class="chip blue">AI</span></summary>
+          <div class="faq-a">We blend deal quality signals (deal score / market delta), listing completeness, and shopper intent (persona + search). The goal is relevance and trust.</div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">What should I prepare for onboarding?<span class="chip">Setup</span></summary>
+          <div class="faq-a">A primary contact, your regions, a quick overview of inventory volume, and how you want leads routed. We’ll help you standardize listing quality.</div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 6px;">
+      <div class="demo" role="region" aria-label="Partner CTA">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div style="display:grid; gap:6px;">
+            <div style="font-weight:900; letter-spacing:-0.6px; font-size:1.2rem; color:#fff;">Let’s partner</div>
+            <div style="color:rgba(255,255,255,0.82); font-size:0.95rem;">If you’re a dealership, we’ll get you set up quickly.</div>
+          </div>
+          <a href="#dealers" class="btn btn-shop" style="padding:12px 16px; min-width:auto;">Request partnership</a>
         </div>
       </div>
     </section>
   </main>
+
+  <div class="footer">
+    © 2026 xpersona • Partnerships: <a href="mailto:partnerships@xpersona.com">partnerships@xpersona.com</a>
+  </div>
+
+  <script>
+    (function () {
+      const form = document.getElementById('partner-form');
+      if (!form) return;
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const data = new FormData(form);
+        const dealership = (data.get('dealership') || '').toString().trim();
+        const name = (data.get('name') || '').toString().trim();
+        const email = (data.get('email') || '').toString().trim();
+        const phone = (data.get('phone') || '').toString().trim();
+        const inventory = (data.get('inventory') || '').toString().trim();
+        const notes = (data.get('notes') || '').toString().trim();
+
+        const subject = encodeURIComponent(`Dealer partnership request: ${dealership || 'xpersona'}`);
+        const body = encodeURIComponent(
+          `Dealership: ${dealership}\n` +
+          `Name: ${name}\n` +
+          `Email: ${email}\n` +
+          `Phone: ${phone}\n` +
+          `Inventory size: ${inventory}\n\n` +
+          `Notes:\n${notes}\n`
+        );
+
+        window.location.href = `mailto:partnerships@xpersona.com?subject=${subject}&body=${body}`;
+      });
+    })();
+  </script>
 
 </body>
 

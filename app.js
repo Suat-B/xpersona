@@ -51,6 +51,7 @@ const compareCountEl = document.getElementById('compare-count');
 const compareModal = document.getElementById('compare-modal');
 const compareBody = document.getElementById('compare-body');
 let lastFocusedElement = null;
+let currentBriefCarId = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', init);
@@ -91,6 +92,31 @@ function setupEventListeners() {
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeDealBrief();
+        });
+    }
+
+    if (aiBriefBody) {
+        aiBriefBody.addEventListener('click', (e) => {
+            const target = e.target?.closest?.('[data-ai-action]');
+            if (!target) return;
+            const action = target.getAttribute('data-ai-action');
+            const carId = target.getAttribute('data-ai-car-id') || currentBriefCarId;
+            if (!action || !carId) return;
+
+            if (action === 'save') {
+                toggleFavoriteById(carId);
+                renderDealBrief(carId);
+                return;
+            }
+            if (action === 'compare') {
+                toggleCompare(carId);
+                renderDealBrief(carId);
+                return;
+            }
+            if (action === 'view') {
+                window.location.href = `details.html?id=${carId}`;
+                return;
+            }
         });
     }
 
@@ -524,19 +550,17 @@ function setupFavoriteButtons() {
 }
 
 function toggleFavorite(id, btn) {
-    if (favorites.has(id)) {
-        favorites.delete(id);
-        btn.classList.remove('active');
-        btn.querySelector('svg').setAttribute('fill', 'none');
-        btn.querySelector('svg').setAttribute('stroke', '#666');
-    } else {
-        favorites.add(id);
+    const updated = toggleFavoriteById(id);
+    if (!btn) return;
+    if (updated) {
         btn.classList.add('active');
         btn.querySelector('svg').setAttribute('fill', '#ff4444');
         btn.querySelector('svg').setAttribute('stroke', '#ff4444');
+    } else {
+        btn.classList.remove('active');
+        btn.querySelector('svg').setAttribute('fill', 'none');
+        btn.querySelector('svg').setAttribute('stroke', '#666');
     }
-    localStorage.setItem('favorites', JSON.stringify([...favorites]));
-    updateSavedCount();
 }
 
 // TikTok redirect URL
@@ -920,6 +944,23 @@ function escapeHtml(input) {
         .replaceAll("'", '&#039;');
 }
 
+function toggleFavoriteById(id) {
+    const key = typeof id === 'number' ? id : String(id);
+    const numeric = Number(key);
+    const storedKey = Number.isNaN(numeric) ? key : numeric;
+
+    if (favorites.has(storedKey)) {
+        favorites.delete(storedKey);
+        localStorage.setItem('favorites', JSON.stringify([...favorites]));
+        updateSavedCount();
+        return false;
+    }
+    favorites.add(storedKey);
+    localStorage.setItem('favorites', JSON.stringify([...favorites]));
+    updateSavedCount();
+    return true;
+}
+
 function handleCardImageLoad(img) {
     const wrapper = img.closest('.car-image-wrapper');
     if (wrapper) wrapper.classList.add('loaded');
@@ -947,13 +988,88 @@ function computeBriefConfidence(rawCar) {
     return 'Low';
 }
 
-function openDealBrief(carId) {
-    if (!aiBriefModal || !aiBriefBody || !aiBriefTitle) return;
+function money(amount) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+}
+
+function computeMonthlyPayment(price, downPaymentAmount) {
+    if (!price || price <= 0) return null;
+    const monthly = Math.round(((price - downPaymentAmount) * 1.07) / 60);
+    return monthly > 0 ? monthly : null;
+}
+
+function computeValueScore(car) {
+    const dealScore = car.dealScore != null ? Number(car.dealScore) : 0;
+    const diff = car.priceDifferential != null ? Number(car.priceDifferential) : null;
+    const days = car.daysOnMarket != null ? Number(car.daysOnMarket) : null;
+    const mileage = car.mileage != null ? Number(car.mileage) : null;
+
+    let score = 58;
+    score += clamp(dealScore * 0.4, 0, 26);
+    if (diff != null && !Number.isNaN(diff)) score += clamp(diff / 700, -12, 16);
+    if (days != null && !Number.isNaN(days) && days > 0) score += clamp(12 - (days / 16), -8, 12);
+    if (mileage != null && !Number.isNaN(mileage) && mileage > 0) score -= clamp((mileage - 35000) / 16000, 0, 16);
+    return clamp(Math.round(score), 0, 99);
+}
+
+function buildFlags(car) {
+    const flags = [];
+    const price = Number(car.price || 0);
+    const mileage = Number(car.mileage || 0);
+    const diff = car.priceDifferential != null ? Number(car.priceDifferential) : null;
+    const days = car.daysOnMarket != null ? Number(car.daysOnMarket) : null;
+    const dealRatingText = formatDealRating(car.dealRating);
+
+    if (!car.vin) flags.push('Missing VIN (ask dealer to confirm)');
+    if (!car.dealer?.name) flags.push('Dealer name missing');
+    if (!car.imageUrl) flags.push('No photo URL found');
+    if (!dealRatingText || dealRatingText === 'No Price Analysis') flags.push('No price analysis available');
+
+    if (mileage > 85000) flags.push('High mileage for most buyers');
+    if (days != null && !Number.isNaN(days) && days >= 65) flags.push('Long time on market (check history)');
+    if (diff != null && !Number.isNaN(diff) && diff < -2000) flags.push('Priced above market average');
+    if (price > 0 && price < 6000) flags.push('Very low price (verify title + condition)');
+
+    return flags;
+}
+
+function buildProsCons(car) {
+    const pros = [];
+    const cons = [];
+
+    const price = Number(car.price || 0);
+    const mileage = Number(car.mileage || 0);
+    const diff = car.priceDifferential != null ? Number(car.priceDifferential) : null;
+    const days = car.daysOnMarket != null ? Number(car.daysOnMarket) : null;
+    const fuel = normalizeText(car.fuelType);
+    const dealRatingText = formatDealRating(car.dealRating);
+
+    if (dealRatingText && dealRatingText !== 'No Price Analysis' && (dealRatingText.includes('Great') || dealRatingText.includes('Good'))) {
+        pros.push(`${dealRatingText} rating`);
+    }
+    if (diff != null && !Number.isNaN(diff) && diff > 0) pros.push(`${money(Math.round(diff))} below market`);
+    if (mileage > 0 && mileage <= 30000) pros.push('Low mileage');
+    if (fuel.includes('electric')) pros.push('Electric (lower fuel cost)');
+    if (fuel.includes('hybrid')) pros.push('Hybrid (better efficiency)');
+
+    if (diff != null && !Number.isNaN(diff) && diff < 0) cons.push(`${money(Math.abs(Math.round(diff)))} above market`);
+    if (mileage > 65000) cons.push('Higher mileage');
+    if (days != null && !Number.isNaN(days) && days >= 55) cons.push('Long time on market');
+    if (!car.vin) cons.push('VIN missing');
+    if (!car.dealer?.name) cons.push('Dealer info incomplete');
+    if (!car.imageUrl) cons.push('Photos missing');
+    if (price <= 0) cons.push('Price missing');
+
+    return { pros: pros.slice(0, 4), cons: cons.slice(0, 4) };
+}
+
+function renderDealBrief(carId) {
+    if (!aiBriefBody || !aiBriefTitle) return;
 
     const car = allCars.find(c => String(c.id) === String(carId));
     if (!car) return;
 
-    lastFocusedElement = document.activeElement;
+    currentBriefCarId = String(car.id);
 
     const year = car.year || car.carYear || '';
     const make = car.make || car.makeName || '';
@@ -966,8 +1082,11 @@ function openDealBrief(carId) {
     const price = Number(car.price || 0);
     const mileage = Number(car.mileage || 0);
     const downPayment = Math.round(price * DOWN_PAYMENT_PERCENT);
+    const monthly = computeMonthlyPayment(price, downPayment);
+
     const dealRatingText = formatDealRating(car.dealRating);
     const dealScore = car.dealScore != null ? Number(car.dealScore) : null;
+    const valueScore = computeValueScore(car);
     const diff = car.priceDifferential != null ? Number(car.priceDifferential) : null;
     const days = car.daysOnMarket != null ? Number(car.daysOnMarket) : null;
 
@@ -977,8 +1096,8 @@ function openDealBrief(carId) {
     const marketLine = (diff == null || Number.isNaN(diff))
         ? 'Market delta unavailable'
         : diff > 0
-            ? `$${Math.round(diff).toLocaleString()} below market average`
-            : `$${Math.abs(Math.round(diff)).toLocaleString()} above market average`;
+            ? `${money(Math.round(diff))} below market average`
+            : `${money(Math.abs(Math.round(diff)))} above market average`;
 
     const daysLine = (days == null || Number.isNaN(days) || days <= 0)
         ? 'Days on market unavailable'
@@ -993,7 +1112,11 @@ function openDealBrief(carId) {
         ? `${dealerName} • ${dealerRating.toFixed(1)}★ (${dealerReviews.toLocaleString()} reviews)`
         : dealerName;
 
-    const money = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+    const flags = buildFlags(car);
+    const { pros, cons } = buildProsCons(car);
+
+    const isSaved = favorites.has(Number.isNaN(Number(currentBriefCarId)) ? currentBriefCarId : Number(currentBriefCarId));
+    const isCompared = compare.has(String(car.id));
 
     const questions = [
         'Can you confirm the out-the-door price (tax, title, fees)?',
@@ -1006,39 +1129,86 @@ function openDealBrief(carId) {
         questions.unshift('Why is this priced below market? Any known issues or constraints?');
     }
 
+    const summaryBadges = `
+      <div class="ai-badges">
+        <span class="ai-badge">${escapeHtml(dealRatingText || 'No Price Analysis')}</span>
+        <span class="ai-badge blue">Value ${valueScore}</span>
+        ${personaMatch ? `<span class="ai-badge blue">${escapeHtml(currentPersona.toUpperCase())} Match ${personaMatch.score}</span>` : ''}
+        <span class="ai-badge muted">Confidence ${escapeHtml(confidence)}</span>
+      </div>
+    `;
+
+    const metersHtml = `
+      <div class="ai-brief-card">
+        <div class="ai-brief-label">AI Scores</div>
+        <div class="ai-meters">
+          <div class="ai-meter">
+            <div class="ai-meter-top"><span>Value</span><span>${valueScore}</span></div>
+            <div class="ai-meter-bar"><div class="ai-meter-fill" style="width:${valueScore}%;"></div></div>
+          </div>
+          <div class="ai-meter">
+            <div class="ai-meter-top"><span>Deal Score</span><span>${dealScore != null && !Number.isNaN(dealScore) ? Math.round(dealScore) : '--'}</span></div>
+            <div class="ai-meter-bar"><div class="ai-meter-fill" style="width:${dealScore != null && !Number.isNaN(dealScore) ? clamp(Math.round(dealScore), 0, 99) : 0}%;"></div></div>
+          </div>
+          ${personaMatch ? `
+          <div class="ai-meter">
+            <div class="ai-meter-top"><span>Persona Match</span><span>${personaMatch.score}</span></div>
+            <div class="ai-meter-bar"><div class="ai-meter-fill" style="width:${personaMatch.score}%;"></div></div>
+          </div>` : ''}
+        </div>
+      </div>
+    `;
+
     const metricsHtml = `
       <div class="ai-brief-grid">
         <div class="ai-brief-card">
-          <div class="ai-brief-label">Deal Rating</div>
-          <div class="ai-brief-value">${escapeHtml(dealRatingText || 'No Price Analysis')}${dealScore != null && !Number.isNaN(dealScore) ? ` • Score ${Math.round(dealScore)}` : ''}</div>
-          <div class="ai-brief-note">${escapeHtml(marketLine)}</div>
+          <div class="ai-brief-label">Market Context</div>
+          <div class="ai-brief-value">${escapeHtml(marketLine)}</div>
+          <div class="ai-brief-note">${escapeHtml(daysLine)}</div>
         </div>
         <div class="ai-brief-card">
-          <div class="ai-brief-label">Estimate</div>
-          <div class="ai-brief-value">${money(downPayment)} down</div>
-          <div class="ai-brief-note">Based on ${(DOWN_PAYMENT_PERCENT * 100).toFixed(0)}% down-payment assumption</div>
+          <div class="ai-brief-label">Affordability</div>
+          <div class="ai-brief-value">${money(downPayment)} down${monthly ? ` • $${monthly}/mo` : ''}</div>
+          <div class="ai-brief-note">Cash price ${money(price || 0)} • ${(DOWN_PAYMENT_PERCENT * 100).toFixed(0)}% down assumption</div>
         </div>
         <div class="ai-brief-card">
           <div class="ai-brief-label">Listing Signals</div>
           <div class="ai-brief-value">${escapeHtml(mileageLine)}</div>
-          <div class="ai-brief-note">${escapeHtml(daysLine)}</div>
-        </div>
-        <div class="ai-brief-card">
-          <div class="ai-brief-label">Confidence</div>
-          <div class="ai-brief-value">${escapeHtml(confidence)}</div>
           <div class="ai-brief-note">${escapeHtml(dealerLine)}</div>
         </div>
-        ${personaMatch ? `
         <div class="ai-brief-card">
-          <div class="ai-brief-label">Persona Match</div>
-          <div class="ai-brief-value">${escapeHtml(currentPersona.toUpperCase())} • Match ${personaMatch.score}</div>
-          <div class="ai-brief-note">Ranking uses price, mileage, deal score, and listing signals</div>
-        </div>` : ''}
+          <div class="ai-brief-label">Tradeoffs</div>
+          <div class="ai-brief-note">${pros.length ? `<span class="ai-inline-label">Pros:</span> ${escapeHtml(pros.join(' • '))}` : 'Pros unavailable'}</div>
+          <div class="ai-brief-note">${cons.length ? `<span class="ai-inline-label">Cons:</span> ${escapeHtml(cons.join(' • '))}` : 'Cons unavailable'}</div>
+        </div>
+      </div>
+    `;
+
+    const flagsHtml = `
+      <div class="ai-brief-card">
+        <div class="ai-brief-label">Risk Flags</div>
+        ${flags.length
+            ? `<div class="ai-flags">${flags.map(f => `<span class="ai-flag">${escapeHtml(f)}</span>`).join('')}</div>`
+            : `<div class="ai-brief-note">No obvious red flags from available data.</div>`}
+      </div>
+    `;
+
+    const actionsHtml = `
+      <div class="ai-brief-card ai-actions">
+        <button type="button" class="ai-action-btn ${isSaved ? 'active' : ''}" data-ai-action="save" data-ai-car-id="${escapeHtml(String(car.id))}">
+          ${isSaved ? 'Saved' : 'Save'}
+        </button>
+        <button type="button" class="ai-action-btn ${isCompared ? 'active' : ''}" data-ai-action="compare" data-ai-car-id="${escapeHtml(String(car.id))}">
+          ${isCompared ? 'Compared' : 'Compare'}
+        </button>
+        <button type="button" class="ai-action-btn primary" data-ai-action="view" data-ai-car-id="${escapeHtml(String(car.id))}">
+          View Details
+        </button>
       </div>
     `;
 
     const questionsHtml = `
-      <div class="ai-brief-card" style="background: white;">
+      <div class="ai-brief-card">
         <div class="ai-brief-label">Questions To Ask</div>
         <ul class="ai-brief-list">
           ${questions.map(q => `<li>${escapeHtml(q)}</li>`).join('')}
@@ -1046,7 +1216,17 @@ function openDealBrief(carId) {
       </div>
     `;
 
-    aiBriefBody.innerHTML = metricsHtml + questionsHtml;
+    aiBriefBody.innerHTML = summaryBadges + metersHtml + metricsHtml + flagsHtml + actionsHtml + questionsHtml;
+}
+
+function openDealBrief(carId) {
+    if (!aiBriefModal || !aiBriefBody || !aiBriefTitle) return;
+
+    const car = allCars.find(c => String(c.id) === String(carId));
+    if (!car) return;
+
+    lastFocusedElement = document.activeElement;
+    renderDealBrief(car.id);
 
     aiBriefModal.classList.add('open');
     aiBriefModal.setAttribute('aria-hidden', 'false');
@@ -1061,6 +1241,7 @@ function closeDealBrief() {
     aiBriefModal.classList.remove('open');
     aiBriefModal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+    currentBriefCarId = null;
     if (lastFocusedElement && lastFocusedElement.focus) lastFocusedElement.focus();
 }
 
