@@ -11,6 +11,7 @@ let isLoading = false;
 let favorites = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
 const DOWN_PAYMENT_PERCENT = 0.15;
 let currentPersona = localStorage.getItem('persona') || 'all';
+let compare = new Set(JSON.parse(sessionStorage.getItem('compare') || '[]'));
 
 // DOM Elements
 const carGrid = document.getElementById('car-grid');
@@ -45,6 +46,10 @@ const clearFiltersBtn = document.getElementById('clear-filters-btn');
 
 const savedModal = document.getElementById('saved-modal');
 const savedBody = document.getElementById('saved-body');
+const compareBtn = document.getElementById('compare-btn');
+const compareCountEl = document.getElementById('compare-count');
+const compareModal = document.getElementById('compare-modal');
+const compareBody = document.getElementById('compare-body');
 let lastFocusedElement = null;
 
 // Initialize
@@ -100,6 +105,7 @@ function setupEventListeners() {
 
     if (savedBtn) savedBtn.addEventListener('click', openSaved);
     if (headerSavedBtn) headerSavedBtn.addEventListener('click', openSaved);
+    if (compareBtn) compareBtn.addEventListener('click', openCompare);
     if (resetBtn) resetBtn.addEventListener('click', clearAllFilters);
     if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearAllFilters);
 
@@ -108,6 +114,15 @@ function setupEventListeners() {
             const target = e.target;
             if (target && target.getAttribute && target.getAttribute('data-ai-modal-close') === 'true') {
                 closeSaved();
+            }
+        });
+    }
+
+    if (compareModal) {
+        compareModal.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target && target.getAttribute && target.getAttribute('data-ai-modal-close') === 'true') {
+                closeCompare();
             }
         });
     }
@@ -153,6 +168,7 @@ async function loadCars() {
 
         if (loading) loading.style.display = 'none';
         updateSavedCount();
+        updateCompareCount();
     } catch (error) {
         console.error('Error loading cars:', error);
         if (loading) {
@@ -438,6 +454,7 @@ function createCarCardHTML(car) {
     const isFav = favorites.has(car.id);
     const dealClass = (car.dealRating || '').toLowerCase().replace(' ', '-');
     const match = currentPersona !== 'all' ? getPersonaMatch(car) : null;
+    const isCompared = compare.has(String(car.id));
 
     // Down Payment Calculation (15%)
     const downPaymentAmount = Math.round(car.price * DOWN_PAYMENT_PERCENT);
@@ -489,6 +506,9 @@ function createCarCardHTML(car) {
         <div class="car-footer-actions">
           <button class="btn-clean-action btn-ai-brief" onclick="event.stopPropagation(); openDealBrief(${car.id})">
             AI Brief
+          </button>
+          <button class="btn-clean-action btn-compare ${isCompared ? 'active' : ''}" onclick="event.stopPropagation(); toggleCompare(${car.id}, this)">
+            ${isCompared ? 'Compared' : 'Compare'}
           </button>
           <button class="btn-clean-action" onclick="event.stopPropagation(); window.location.href='details.html?id=${car.id}'">
             View
@@ -687,6 +707,15 @@ function updateSavedCount() {
     if (headerSavedCountEl) headerSavedCountEl.textContent = String(favorites.size);
 }
 
+function updateCompareCount() {
+    if (compareCountEl) compareCountEl.textContent = String(compare.size);
+}
+
+function persistCompare() {
+    sessionStorage.setItem('compare', JSON.stringify([...compare]));
+    updateCompareCount();
+}
+
 function clearAllFilters() {
     if (searchInput) searchInput.value = '';
     if (filterMake) filterMake.value = '';
@@ -700,6 +729,126 @@ function clearAllFilters() {
     localStorage.setItem('persona', currentPersona);
     syncPersonaUI();
     populateModels();
+    applyFilters();
+}
+
+function toggleCompare(id, btn) {
+    const key = String(id);
+    if (compare.has(key)) {
+        compare.delete(key);
+        if (btn) {
+            btn.classList.remove('active');
+            btn.textContent = 'Compare';
+        }
+        persistCompare();
+        return;
+    }
+
+    if (compare.size >= 3) {
+        openCompare();
+        return;
+    }
+
+    compare.add(key);
+    if (btn) {
+        btn.classList.add('active');
+        btn.textContent = 'Compared';
+    }
+    persistCompare();
+}
+
+function openCompare() {
+    if (!compareModal || !compareBody) return;
+
+    lastFocusedElement = document.activeElement;
+
+    const selected = [...compare]
+        .map(id => allCars.find(c => String(c.id) === String(id)))
+        .filter(Boolean);
+
+    if (selected.length === 0) {
+        compareBody.innerHTML = `
+          <div class="ai-brief-card">
+            <div class="ai-brief-label">No cars selected</div>
+            <div class="ai-brief-note">Tap “Compare” on up to 3 listings to see them side-by-side.</div>
+          </div>
+        `;
+    } else {
+        const cols = selected.map(c => {
+            const title = escapeHtml(`${c.year} ${c.make} ${c.model}`.trim());
+            const img = escapeHtml(c.imageUrl || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800');
+            const deal = escapeHtml(formatDealRating(c.dealRating) || 'No Price Analysis');
+            const price = `$${Number(c.price || 0).toLocaleString()}`;
+            const down = `$${Math.round(Number(c.price || 0) * DOWN_PAYMENT_PERCENT).toLocaleString()}`;
+            const miles = c.mileage != null ? `${Math.round(Number(c.mileage || 0) / 1000)}k` : '--';
+            const fuel = escapeHtml(c.fuelType || '--');
+            const body = escapeHtml(c.bodyType || '--');
+            const diff = c.priceDifferential != null && !Number.isNaN(Number(c.priceDifferential))
+                ? (Number(c.priceDifferential) > 0
+                    ? `$${Math.round(Number(c.priceDifferential)).toLocaleString()} below`
+                    : `$${Math.abs(Math.round(Number(c.priceDifferential))).toLocaleString()} above`)
+                : '--';
+            const days = c.daysOnMarket != null && !Number.isNaN(Number(c.daysOnMarket)) && Number(c.daysOnMarket) > 0
+                ? `${Math.round(Number(c.daysOnMarket))}d`
+                : '--';
+
+            return `
+              <div class="compare-col">
+                <div class="compare-hero">
+                  <img src="${img}" alt="${title}" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous">
+                </div>
+                <div class="compare-content">
+                  <div class="compare-title">${title}</div>
+                  <div class="compare-kv">
+                    <div class="compare-kv-row"><span class="compare-k">Deal</span><span class="compare-v">${deal}</span></div>
+                    <div class="compare-kv-row"><span class="compare-k">Price</span><span class="compare-v">${price}</span></div>
+                    <div class="compare-kv-row"><span class="compare-k">Down</span><span class="compare-v">${down}</span></div>
+                    <div class="compare-kv-row"><span class="compare-k">Miles</span><span class="compare-v">${miles}</span></div>
+                    <div class="compare-kv-row"><span class="compare-k">Fuel</span><span class="compare-v">${fuel}</span></div>
+                    <div class="compare-kv-row"><span class="compare-k">Body</span><span class="compare-v">${body}</span></div>
+                    <div class="compare-kv-row"><span class="compare-k">Market</span><span class="compare-v">${diff}</span></div>
+                    <div class="compare-kv-row"><span class="compare-k">DOM</span><span class="compare-v">${days}</span></div>
+                  </div>
+                  <div class="compare-actions">
+                    <button type="button" class="compare-action" onclick="window.location.href='details.html?id=${c.id}'">View</button>
+                    <button type="button" class="compare-action" onclick="removeCompare('${escapeHtml(String(c.id))}')">Remove</button>
+                  </div>
+                </div>
+              </div>
+            `;
+        }).join('');
+
+        compareBody.innerHTML = `
+          <div class="compare-table">
+            <div class="ai-brief-card">
+              <div class="ai-brief-label">Tip</div>
+              <div class="ai-brief-note">Compare focuses on deal + affordability + signals. Add up to 3 cars.</div>
+            </div>
+            <div class="compare-grid">${cols}</div>
+          </div>
+        `;
+    }
+
+    compareModal.classList.add('open');
+    compareModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    const closeBtn = compareModal.querySelector('[data-ai-modal-close="true"]');
+    if (closeBtn && closeBtn.focus) closeBtn.focus();
+}
+
+function closeCompare() {
+    if (!compareModal) return;
+    compareModal.classList.remove('open');
+    compareModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocusedElement && lastFocusedElement.focus) lastFocusedElement.focus();
+}
+
+function removeCompare(id) {
+    compare.delete(String(id));
+    persistCompare();
+    openCompare();
     applyFilters();
 }
 

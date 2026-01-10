@@ -43,7 +43,6 @@
       <select id="filter-year"></select>
       <select id="filter-price"></select>
       <select id="filter-body"></select>
-      <select id="sort-select"></select>
     </div>
   </div>
 
@@ -107,6 +106,16 @@
       <div class="ai-toolbar-right">
         <span class="ai-toolbar-label">Persona</span>
         <span class="ai-toolbar-persona" id="persona-label">All</span>
+        <select id="sort-select" class="ai-select" aria-label="Sort">
+          <option value="">Top deals</option>
+          <option value="year">Newest year</option>
+          <option value="mileage">Lowest mileage</option>
+          <option value="price-asc">Lowest price</option>
+          <option value="price-desc">Highest price</option>
+        </select>
+        <button type="button" class="ai-toolbar-btn" id="compare-btn">
+          Compare <span class="ai-toolbar-badge" id="compare-count">0</span>
+        </button>
         <button type="button" class="ai-toolbar-btn" id="saved-btn">
           Saved <span class="ai-toolbar-badge" id="saved-count">0</span>
         </button>
@@ -175,6 +184,23 @@
         <button class="ai-modal-close" type="button" aria-label="Close" data-ai-modal-close="true">✕</button>
       </div>
       <div class="ai-modal-body" id="saved-body"></div>
+      <div class="ai-modal-footer">
+        <button class="ai-modal-primary" type="button" data-ai-modal-close="true">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-modal" id="compare-modal" aria-hidden="true">
+    <div class="ai-modal-overlay" data-ai-modal-close="true"></div>
+    <div class="ai-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="compare-title">
+      <div class="ai-modal-header">
+        <div class="ai-modal-title-wrap">
+          <div class="ai-modal-kicker">Compare</div>
+          <h2 class="ai-modal-title" id="compare-title">Compare Cars</h2>
+        </div>
+        <button class="ai-modal-close" type="button" aria-label="Close" data-ai-modal-close="true">✕</button>
+      </div>
+      <div class="ai-modal-body" id="compare-body"></div>
       <div class="ai-modal-footer">
         <button class="ai-modal-primary" type="button" data-ai-modal-close="true">Done</button>
       </div>
