@@ -10,6 +10,7 @@ const batchSize = 24;
 let isLoading = false;
 let favorites = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
 const DOWN_PAYMENT_PERCENT = 0.15;
+let currentPersona = localStorage.getItem('persona') || 'all';
 
 // DOM Elements
 const carGrid = document.getElementById('car-grid');
@@ -30,6 +31,22 @@ const sortSelect = document.getElementById('sort-select');
 const searchBtn = document.getElementById('search-btn');
 const filterTags = document.querySelectorAll('.filter-tag');
 
+const aiBriefModal = document.getElementById('ai-brief-modal');
+const aiBriefTitle = document.getElementById('ai-brief-title');
+const aiBriefBody = document.getElementById('ai-brief-body');
+const personaLabel = document.getElementById('persona-label');
+const rankingLabel = document.getElementById('ranking-label');
+const savedBtn = document.getElementById('saved-btn');
+const savedCountEl = document.getElementById('saved-count');
+const headerSavedBtn = document.getElementById('header-saved-btn');
+const headerSavedCountEl = document.getElementById('header-saved-count');
+const resetBtn = document.getElementById('reset-btn');
+const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+const savedModal = document.getElementById('saved-modal');
+const savedBody = document.getElementById('saved-body');
+let lastFocusedElement = null;
+
 // Initialize
 document.addEventListener('DOMContentLoaded', init);
 
@@ -38,6 +55,7 @@ async function init() {
     setupHeaderScroll();
     setupInfiniteScroll();
     await loadCars();
+    syncPersonaUI();
 }
 
 function setupEventListeners() {
@@ -57,11 +75,48 @@ function setupEventListeners() {
             applyFilters();
         });
     });
+
+    if (aiBriefModal) {
+        aiBriefModal.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target && target.getAttribute && target.getAttribute('data-ai-modal-close') === 'true') {
+                closeDealBrief();
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDealBrief();
+        });
+    }
+
+    const queryChips = document.querySelectorAll('.ai-query-chip');
+    queryChips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+            const q = chip.getAttribute('data-ai-query') || chip.textContent || '';
+            if (searchInput) searchInput.value = q.trim();
+            applyFilters();
+        });
+    });
+
+    if (savedBtn) savedBtn.addEventListener('click', openSaved);
+    if (headerSavedBtn) headerSavedBtn.addEventListener('click', openSaved);
+    if (resetBtn) resetBtn.addEventListener('click', clearAllFilters);
+    if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearAllFilters);
+
+    if (savedModal) {
+        savedModal.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target && target.getAttribute && target.getAttribute('data-ai-modal-close') === 'true') {
+                closeSaved();
+            }
+        });
+    }
 }
 
 function setupHeaderScroll() {
     const header = document.getElementById('header');
     window.addEventListener('scroll', () => {
+        if (!header) return;
         header.classList.toggle('scrolled', window.scrollY > 50);
     });
 }
@@ -84,6 +139,7 @@ function setupInfiniteScroll() {
 
 async function loadCars() {
     try {
+        if (loading) loading.style.display = 'block';
         const response = await fetch('cars.json');
         if (!response.ok) throw new Error('Failed to load cars');
         const rawData = await response.json();
@@ -95,10 +151,13 @@ async function loadCars() {
         updateStats();
         applyFilters();
 
-        loading.style.display = 'none';
+        if (loading) loading.style.display = 'none';
+        updateSavedCount();
     } catch (error) {
         console.error('Error loading cars:', error);
-        loading.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3 class="empty-title">Error Loading Cars</h3><p class="empty-subtitle">Please run: python max_scraper.py</p></div>';
+        if (loading) {
+            loading.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3 class="empty-title">Error Loading Cars</h3><p class="empty-subtitle">Please run: python max_scraper.py</p></div>';
+        }
     }
 }
 
@@ -306,12 +365,20 @@ function applyFilters() {
     });
 
     filteredCars.sort((a, b) => {
+        const personaA = currentPersona !== 'all' ? getPersonaMatch(a).score : null;
+        const personaB = currentPersona !== 'all' ? getPersonaMatch(b).score : null;
+
         switch (sort) {
             case 'price-asc': return a.price - b.price;
             case 'price-desc': return b.price - a.price;
             case 'mileage': return a.mileage - b.mileage;
             case 'year': return b.year - a.year;
-            default: return (b.dealScore || 0) - (a.dealScore || 0);
+            default:
+                if (currentPersona !== 'all') {
+                    const matchDiff = (personaB || 0) - (personaA || 0);
+                    if (matchDiff !== 0) return matchDiff;
+                }
+                return (b.dealScore || 0) - (a.dealScore || 0);
         }
     });
 
@@ -370,6 +437,7 @@ function loadMoreCars() {
 function createCarCardHTML(car) {
     const isFav = favorites.has(car.id);
     const dealClass = (car.dealRating || '').toLowerCase().replace(' ', '-');
+    const match = currentPersona !== 'all' ? getPersonaMatch(car) : null;
 
     // Down Payment Calculation (15%)
     const downPaymentAmount = Math.round(car.price * DOWN_PAYMENT_PERCENT);
@@ -385,11 +453,12 @@ function createCarCardHTML(car) {
 
     return `
     <div class="car-image-wrapper">
-      <img src="${car.imageUrl}" alt="${car.year} ${car.make} ${car.model}" class="car-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800'">
+      <img src="${car.imageUrl}" alt="${car.year} ${car.make} ${car.model}" class="car-image" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous" onload="handleCardImageLoad(this)" onerror="handleCardImageError(this)">
       
       <div class="card-badges">
          ${car.dealRating && car.dealRating !== 'No Price Analysis' ?
             `<span class="deal-badge-float ${dealClass}">${car.dealRating}</span>` : ''}
+         ${match ? `<span class="deal-badge-float ai-match">Match ${match.score}</span>` : ''}
       </div>
 
       <button class="car-favorite ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${car.id}, this)">
@@ -417,9 +486,14 @@ function createCarCardHTML(car) {
       
       <div class="car-footer-row">
         <span class="car-location-sm">${city}, ${state}</span>
-        <button class="btn-clean-action" onclick="event.stopPropagation(); window.location.href='details.html?id=${car.id}'">
-          View
-        </button>
+        <div class="car-footer-actions">
+          <button class="btn-clean-action btn-ai-brief" onclick="event.stopPropagation(); openDealBrief(${car.id})">
+            AI Brief
+          </button>
+          <button class="btn-clean-action" onclick="event.stopPropagation(); window.location.href='details.html?id=${car.id}'">
+            View
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -442,6 +516,7 @@ function toggleFavorite(id, btn) {
         btn.querySelector('svg').setAttribute('stroke', '#ff4444');
     }
     localStorage.setItem('favorites', JSON.stringify([...favorites]));
+    updateSavedCount();
 }
 
 // TikTok redirect URL
@@ -474,6 +549,370 @@ function selectBodyType(type) {
         }
     }
     applyFilters();
+}
+
+function clamp(num, min, max) {
+    return Math.min(max, Math.max(min, num));
+}
+
+function normalizeText(value) {
+    return String(value || '').toLowerCase();
+}
+
+function getPersonaMatch(car) {
+    const persona = currentPersona || 'all';
+    if (persona === 'all') return { score: 0 };
+
+    const body = normalizeText(car.bodyType);
+    const fuel = normalizeText(car.fuelType);
+    const drivetrain = normalizeText(car.drivetrain);
+    const transmission = normalizeText(car.transmission);
+
+    const price = Number(car.price || 0);
+    const mileage = Number(car.mileage || 0);
+    const dealScore = car.dealScore != null ? Number(car.dealScore) : 0;
+    const diff = car.priceDifferential != null ? Number(car.priceDifferential) : null;
+    const days = car.daysOnMarket != null ? Number(car.daysOnMarket) : null;
+
+    let score = 55;
+    score += clamp((dealScore || 0) * 0.35, 0, 22);
+
+    if (diff != null && !Number.isNaN(diff)) {
+        score += clamp(diff / 600, -14, 16);
+    }
+
+    if (days != null && !Number.isNaN(days) && days > 0) {
+        score += clamp(10 - (days / 18), -6, 10);
+    }
+
+    const mileagePenalty = mileage > 0 ? clamp((mileage - 35000) / 18000, 0, 12) : 0;
+    score -= mileagePenalty;
+
+    const downPayment = price > 0 ? price * DOWN_PAYMENT_PERCENT : 0;
+
+    switch (persona) {
+        case 'commuter':
+            if (fuel.includes('electric')) score += 18;
+            if (fuel.includes('hybrid')) score += 10;
+            if (body.includes('sedan')) score += 8;
+            if (mileage > 0 && mileage <= 30000) score += 10;
+            if (downPayment > 0 && downPayment <= 4500) score += 8;
+            break;
+        case 'family':
+            if (body.includes('suv')) score += 16;
+            if (body.includes('van')) score += 14;
+            if (body.includes('truck')) score += 6;
+            if (drivetrain.includes('awd') || drivetrain.includes('4wd')) score += 8;
+            if (mileage > 0 && mileage <= 50000) score += 6;
+            break;
+        case 'roadtrip':
+            if (body.includes('suv')) score += 10;
+            if (drivetrain.includes('awd') || drivetrain.includes('4wd')) score += 10;
+            if (fuel.includes('diesel')) score += 6;
+            if (transmission.includes('automatic')) score += 3;
+            if (mileage > 0 && mileage <= 60000) score += 6;
+            break;
+        case 'performance':
+            if (body.includes('coupe')) score += 16;
+            if (body.includes('luxury')) score += 10;
+            if (price >= 35000) score += 8;
+            if (drivetrain.includes('awd') || drivetrain.includes('rwd')) score += 6;
+            break;
+        case 'ev':
+            if (fuel.includes('electric')) score += 28;
+            if (fuel.includes('hybrid')) score -= 8;
+            if (!fuel.includes('electric') && !fuel.includes('ev')) score -= 18;
+            break;
+        case 'budget':
+            if (downPayment > 0) {
+                score += clamp((7000 - downPayment) / 500, -10, 16);
+            }
+            if (price > 0) {
+                score += clamp((28000 - price) / 1200, -10, 18);
+            }
+            if (dealScore >= 70) score += 6;
+            break;
+        default:
+            break;
+    }
+
+    const finalScore = clamp(Math.round(score), 0, 99);
+    return { score: finalScore };
+}
+
+function syncPersonaUI() {
+    const pills = document.querySelectorAll('.persona-pill');
+    if (!pills || pills.length === 0) return;
+    pills.forEach(p => p.classList.remove('active'));
+
+    if (personaLabel) {
+        const map = {
+            all: 'All',
+            commuter: 'Commuter',
+            family: 'Family',
+            roadtrip: 'Road Trip',
+            performance: 'Performance',
+            ev: 'EV-first',
+            budget: 'Budget'
+        };
+        personaLabel.textContent = map[currentPersona] || 'All';
+    }
+
+    if (rankingLabel) {
+        rankingLabel.textContent = currentPersona === 'all' ? 'Ranked by deal score' : 'Ranked by persona match, then deal score';
+    }
+
+    for (const pill of pills) {
+        const label = pill.querySelector('.persona-pill-label')?.innerText || '';
+        const normalized = label.toLowerCase().replace(/\s+/g, '');
+        if (normalized === 'all' && currentPersona === 'all') pill.classList.add('active');
+        if (normalized === 'commuter' && currentPersona === 'commuter') pill.classList.add('active');
+        if (normalized === 'family' && currentPersona === 'family') pill.classList.add('active');
+        if (normalized === 'roadtrip' && currentPersona === 'roadtrip') pill.classList.add('active');
+        if (normalized === 'performance' && currentPersona === 'performance') pill.classList.add('active');
+        if ((normalized === 'ev-first' || normalized === 'evfirst') && currentPersona === 'ev') pill.classList.add('active');
+        if (normalized === 'budget' && currentPersona === 'budget') pill.classList.add('active');
+    }
+}
+
+function selectPersona(persona) {
+    currentPersona = persona || 'all';
+    localStorage.setItem('persona', currentPersona);
+    syncPersonaUI();
+    applyFilters();
+}
+
+function updateSavedCount() {
+    if (savedCountEl) savedCountEl.textContent = String(favorites.size);
+    if (headerSavedCountEl) headerSavedCountEl.textContent = String(favorites.size);
+}
+
+function clearAllFilters() {
+    if (searchInput) searchInput.value = '';
+    if (filterMake) filterMake.value = '';
+    if (filterModel) filterModel.value = '';
+    if (filterYear) filterYear.value = '';
+    if (filterPrice) filterPrice.value = '';
+    if (filterBody) filterBody.value = '';
+    if (sortSelect) sortSelect.value = '';
+
+    currentPersona = 'all';
+    localStorage.setItem('persona', currentPersona);
+    syncPersonaUI();
+    populateModels();
+    applyFilters();
+}
+
+function openSaved() {
+    if (!savedModal || !savedBody) return;
+
+    lastFocusedElement = document.activeElement;
+
+    const savedCars = allCars.filter(c => favorites.has(c.id));
+    if (savedCars.length === 0) {
+        savedBody.innerHTML = `
+          <div class="ai-brief-card">
+            <div class="ai-brief-label">No saved cars yet</div>
+            <div class="ai-brief-note">Tap the heart on any listing to save it here.</div>
+          </div>
+        `;
+    } else {
+        const rows = savedCars.slice(0, 50).map(c => {
+            const title = escapeHtml(`${c.year} ${c.make} ${c.model}`.trim());
+            const meta = escapeHtml(`${Math.round((c.mileage || 0) / 1000)}k miles • $${(c.price || 0).toLocaleString()}`);
+            const img = escapeHtml(c.imageUrl || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800');
+            return `
+              <div class="saved-row">
+                <div class="saved-thumb"><img src="${img}" alt="${title}" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous"></div>
+                <div>
+                  <div class="saved-title">${title}</div>
+                  <div class="saved-meta">${meta}</div>
+                </div>
+                <div class="saved-actions">
+                  <button type="button" class="saved-action" onclick="window.location.href='details.html?id=${c.id}'">View</button>
+                  <button type="button" class="saved-action" onclick="removeSaved(${c.id})">Remove</button>
+                </div>
+              </div>
+            `;
+        }).join('');
+
+        savedBody.innerHTML = rows;
+    }
+
+    savedModal.classList.add('open');
+    savedModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    const closeBtn = savedModal.querySelector('[data-ai-modal-close="true"]');
+    if (closeBtn && closeBtn.focus) closeBtn.focus();
+}
+
+function closeSaved() {
+    if (!savedModal) return;
+    savedModal.classList.remove('open');
+    savedModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocusedElement && lastFocusedElement.focus) lastFocusedElement.focus();
+}
+
+function removeSaved(id) {
+    favorites.delete(id);
+    localStorage.setItem('favorites', JSON.stringify([...favorites]));
+    updateSavedCount();
+    openSaved();
+}
+
+function escapeHtml(input) {
+    return String(input)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
+function handleCardImageLoad(img) {
+    const wrapper = img.closest('.car-image-wrapper');
+    if (wrapper) wrapper.classList.add('loaded');
+}
+
+function handleCardImageError(img) {
+    img.src = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800';
+    const wrapper = img.closest('.car-image-wrapper');
+    if (wrapper) wrapper.classList.add('loaded');
+}
+
+function computeBriefConfidence(rawCar) {
+    const signals = [
+        rawCar.price != null && rawCar.price > 0,
+        rawCar.mileage != null && rawCar.mileage >= 0,
+        rawCar.dealRating && rawCar.dealRating !== 'No Price Analysis',
+        rawCar.priceDifferential != null && !Number.isNaN(Number(rawCar.priceDifferential)),
+        rawCar.daysOnMarket != null && !Number.isNaN(Number(rawCar.daysOnMarket)),
+        rawCar.dealer?.name,
+        rawCar.imageUrl
+    ];
+    const score = signals.filter(Boolean).length / signals.length;
+    if (score >= 0.78) return 'High';
+    if (score >= 0.52) return 'Medium';
+    return 'Low';
+}
+
+function openDealBrief(carId) {
+    if (!aiBriefModal || !aiBriefBody || !aiBriefTitle) return;
+
+    const car = allCars.find(c => String(c.id) === String(carId));
+    if (!car) return;
+
+    lastFocusedElement = document.activeElement;
+
+    const year = car.year || car.carYear || '';
+    const make = car.make || car.makeName || '';
+    const model = car.model || car.modelName || '';
+    const trim = car.trim || car.trimName || '';
+
+    const title = `${year} ${make} ${model}${trim ? ` ${trim}` : ''}`.trim();
+    aiBriefTitle.textContent = title || 'Deal Brief';
+
+    const price = Number(car.price || 0);
+    const mileage = Number(car.mileage || 0);
+    const downPayment = Math.round(price * DOWN_PAYMENT_PERCENT);
+    const dealRatingText = formatDealRating(car.dealRating);
+    const dealScore = car.dealScore != null ? Number(car.dealScore) : null;
+    const diff = car.priceDifferential != null ? Number(car.priceDifferential) : null;
+    const days = car.daysOnMarket != null ? Number(car.daysOnMarket) : null;
+
+    const confidence = computeBriefConfidence(car);
+    const personaMatch = currentPersona !== 'all' ? getPersonaMatch(car) : null;
+
+    const marketLine = (diff == null || Number.isNaN(diff))
+        ? 'Market delta unavailable'
+        : diff > 0
+            ? `$${Math.round(diff).toLocaleString()} below market average`
+            : `$${Math.abs(Math.round(diff)).toLocaleString()} above market average`;
+
+    const daysLine = (days == null || Number.isNaN(days) || days <= 0)
+        ? 'Days on market unavailable'
+        : `${Math.round(days)} days on market`;
+
+    const mileageLine = mileage > 0 ? `${Math.round(mileage / 1000)}k miles` : 'Mileage unavailable';
+
+    const dealerName = car.dealer?.name ? escapeHtml(car.dealer.name) : 'Dealer info unavailable';
+    const dealerRating = car.dealer?.rating != null ? Number(car.dealer.rating) : null;
+    const dealerReviews = car.dealer?.reviews != null ? Number(car.dealer.reviews) : null;
+    const dealerLine = (dealerRating && dealerReviews != null)
+        ? `${dealerName} • ${dealerRating.toFixed(1)}★ (${dealerReviews.toLocaleString()} reviews)`
+        : dealerName;
+
+    const money = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+
+    const questions = [
+        'Can you confirm the out-the-door price (tax, title, fees)?',
+        'Do you have the full service history and any accident reports?',
+        'What is the return policy / inspection window?',
+        'Are there any open recalls or reconditioning notes?',
+    ];
+
+    if (diff != null && !Number.isNaN(diff) && diff > 0) {
+        questions.unshift('Why is this priced below market? Any known issues or constraints?');
+    }
+
+    const metricsHtml = `
+      <div class="ai-brief-grid">
+        <div class="ai-brief-card">
+          <div class="ai-brief-label">Deal Rating</div>
+          <div class="ai-brief-value">${escapeHtml(dealRatingText || 'No Price Analysis')}${dealScore != null && !Number.isNaN(dealScore) ? ` • Score ${Math.round(dealScore)}` : ''}</div>
+          <div class="ai-brief-note">${escapeHtml(marketLine)}</div>
+        </div>
+        <div class="ai-brief-card">
+          <div class="ai-brief-label">Estimate</div>
+          <div class="ai-brief-value">${money(downPayment)} down</div>
+          <div class="ai-brief-note">Based on ${(DOWN_PAYMENT_PERCENT * 100).toFixed(0)}% down-payment assumption</div>
+        </div>
+        <div class="ai-brief-card">
+          <div class="ai-brief-label">Listing Signals</div>
+          <div class="ai-brief-value">${escapeHtml(mileageLine)}</div>
+          <div class="ai-brief-note">${escapeHtml(daysLine)}</div>
+        </div>
+        <div class="ai-brief-card">
+          <div class="ai-brief-label">Confidence</div>
+          <div class="ai-brief-value">${escapeHtml(confidence)}</div>
+          <div class="ai-brief-note">${escapeHtml(dealerLine)}</div>
+        </div>
+        ${personaMatch ? `
+        <div class="ai-brief-card">
+          <div class="ai-brief-label">Persona Match</div>
+          <div class="ai-brief-value">${escapeHtml(currentPersona.toUpperCase())} • Match ${personaMatch.score}</div>
+          <div class="ai-brief-note">Ranking uses price, mileage, deal score, and listing signals</div>
+        </div>` : ''}
+      </div>
+    `;
+
+    const questionsHtml = `
+      <div class="ai-brief-card" style="background: white;">
+        <div class="ai-brief-label">Questions To Ask</div>
+        <ul class="ai-brief-list">
+          ${questions.map(q => `<li>${escapeHtml(q)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+
+    aiBriefBody.innerHTML = metricsHtml + questionsHtml;
+
+    aiBriefModal.classList.add('open');
+    aiBriefModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    const closeBtn = aiBriefModal.querySelector('[data-ai-modal-close="true"]');
+    if (closeBtn && closeBtn.focus) closeBtn.focus();
+}
+
+function closeDealBrief() {
+    if (!aiBriefModal) return;
+    aiBriefModal.classList.remove('open');
+    aiBriefModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocusedElement && lastFocusedElement.focus) lastFocusedElement.focus();
 }
 
 
