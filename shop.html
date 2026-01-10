@@ -16,6 +16,9 @@
   <header class="header" id="header">
     <a href="index.html" class="logo">xpersona</a>
     <div class="header-right">
+      <button type="button" class="header-action" id="compare-btn">
+        Compare <span class="header-action-badge" id="compare-count">0</span>
+      </button>
       <button type="button" class="header-action" id="header-saved-btn">
         Saved <span class="header-action-badge" id="header-saved-count">0</span>
       </button>
@@ -29,13 +32,30 @@
         autocomplete="off">
       <button id="search-btn" class="search-btn-modern">Go</button>
     </div>
-    <div class="ai-search-hint" aria-label="AI Search hint">
-      <span class="ai-search-pill">AI Search</span>
-      <span style="white-space:nowrap;">Try:</span>
-      <button type="button" class="ai-query-chip" data-ai-query="5k down electric SUV">5k down electric SUV</button>
-      <button type="button" class="ai-query-chip" data-ai-query="under 25000 honda 2020">under 25000 honda 2020</button>
-      <button type="button" class="ai-query-chip" data-ai-query="bmw coupe below 40k">bmw coupe below 40k</button>
+    <div class="search-secondary-row" aria-label="Search controls">
+      <button type="button" class="search-secondary-btn" id="filters-toggle-btn" aria-controls="filters-panel"
+        aria-expanded="false">Filters</button>
+      <select id="sort-select" class="ai-select search-secondary-select" aria-label="Sort">
+        <option value="">Top deals</option>
+        <option value="year">Newest year</option>
+        <option value="mileage">Lowest mileage</option>
+        <option value="price-asc">Lowest price</option>
+        <option value="price-desc">Highest price</option>
+      </select>
+      <button type="button" class="search-secondary-btn secondary" id="reset-btn">Reset</button>
     </div>
+    <details class="ai-search-details">
+      <summary class="ai-search-summary">
+        <span class="ai-search-pill">AI Search</span>
+        <span class="ai-search-summary-text">Ideas</span>
+      </summary>
+      <div class="ai-search-hint" aria-label="AI Search hint">
+        <span style="white-space:nowrap;">Try:</span>
+        <button type="button" class="ai-query-chip" data-ai-query="5k down electric SUV">5k down electric SUV</button>
+        <button type="button" class="ai-query-chip" data-ai-query="under 25000 honda 2020">under 25000 honda 2020</button>
+        <button type="button" class="ai-query-chip" data-ai-query="bmw coupe below 40k">bmw coupe below 40k</button>
+      </div>
+    </details>
     <!-- Hidden but functional filters for app.js compatibility -->
     <div style="display:none;">
       <select id="filter-make"></select>
@@ -46,80 +66,72 @@
     </div>
   </div>
 
-  <!-- Horizontal Category Scroll -->
-  <div class="category-scroll-container">
-    <div class="cat-pill active" onclick="selectBodyType('')">
-      <span class="cat-pill-label">All</span>
+  <section class="filters-panel" id="filters-panel" aria-label="Filters" aria-hidden="true">
+    <div class="filters-panel-header">
+      <div class="filters-panel-title">Filters</div>
+      <button type="button" class="filters-panel-close" id="filters-close-btn" aria-label="Close filters">✕</button>
     </div>
-    <div class="cat-pill" onclick="selectBodyType('SUV')">
-      <span class="cat-pill-label">SUV</span>
+    <div class="filters-panel-section">
+      <div class="filters-panel-label">Body type</div>
+      <div class="category-scroll-container">
+        <div class="cat-pill active" onclick="selectBodyType('')">
+          <span class="cat-pill-label">All</span>
+        </div>
+        <div class="cat-pill" onclick="selectBodyType('SUV')">
+          <span class="cat-pill-label">SUV</span>
+        </div>
+        <div class="cat-pill" onclick="selectBodyType('Sedan')">
+          <span class="cat-pill-label">Sedan</span>
+        </div>
+        <div class="cat-pill" onclick="selectBodyType('Truck')">
+          <span class="cat-pill-label">Truck</span>
+        </div>
+        <div class="cat-pill" onclick="selectBodyType('Coupe')">
+          <span class="cat-pill-label">Coupe</span>
+        </div>
+        <div class="cat-pill" onclick="selectBodyType('Luxury')">
+          <span class="cat-pill-label">Luxury</span>
+        </div>
+        <div class="cat-pill" onclick="selectBodyType('Electric')">
+          <span class="cat-pill-label">Electric</span>
+        </div>
+      </div>
     </div>
-    <div class="cat-pill" onclick="selectBodyType('Sedan')">
-      <span class="cat-pill-label">Sedan</span>
+    <div class="filters-panel-section">
+      <div class="filters-panel-label">Persona</div>
+      <div class="persona-scroll-container" aria-label="AI Persona selector">
+        <div class="persona-pill active" onclick="selectPersona('all')">
+          <span class="persona-pill-label">All</span>
+        </div>
+        <div class="persona-pill" onclick="selectPersona('commuter')">
+          <span class="persona-pill-label">Commuter</span>
+        </div>
+        <div class="persona-pill" onclick="selectPersona('family')">
+          <span class="persona-pill-label">Family</span>
+        </div>
+        <div class="persona-pill" onclick="selectPersona('roadtrip')">
+          <span class="persona-pill-label">Road Trip</span>
+        </div>
+        <div class="persona-pill" onclick="selectPersona('performance')">
+          <span class="persona-pill-label">Performance</span>
+        </div>
+        <div class="persona-pill" onclick="selectPersona('ev')">
+          <span class="persona-pill-label">EV-first</span>
+        </div>
+        <div class="persona-pill" onclick="selectPersona('budget')">
+          <span class="persona-pill-label">Budget</span>
+        </div>
+      </div>
     </div>
-    <div class="cat-pill" onclick="selectBodyType('Truck')">
-      <span class="cat-pill-label">Truck</span>
-    </div>
-    <div class="cat-pill" onclick="selectBodyType('Coupe')">
-      <span class="cat-pill-label">Coupe</span>
-    </div>
-    <div class="cat-pill" onclick="selectBodyType('Luxury')">
-      <span class="cat-pill-label">Luxury</span>
-    </div>
-    <div class="cat-pill" onclick="selectBodyType('Electric')">
-      <span class="cat-pill-label">Electric</span>
-    </div>
-  </div>
-
-  <div class="persona-scroll-container" aria-label="AI Persona selector">
-    <div class="persona-pill active" onclick="selectPersona('all')">
-      <span class="persona-pill-label">All</span>
-    </div>
-    <div class="persona-pill" onclick="selectPersona('commuter')">
-      <span class="persona-pill-label">Commuter</span>
-    </div>
-    <div class="persona-pill" onclick="selectPersona('family')">
-      <span class="persona-pill-label">Family</span>
-    </div>
-    <div class="persona-pill" onclick="selectPersona('roadtrip')">
-      <span class="persona-pill-label">Road Trip</span>
-    </div>
-    <div class="persona-pill" onclick="selectPersona('performance')">
-      <span class="persona-pill-label">Performance</span>
-    </div>
-    <div class="persona-pill" onclick="selectPersona('ev')">
-      <span class="persona-pill-label">EV-first</span>
-    </div>
-    <div class="persona-pill" onclick="selectPersona('budget')">
-      <span class="persona-pill-label">Budget</span>
-    </div>
-  </div>
+  </section>
 
   <!-- Main Feed -->
   <main class="results-section">
     <div class="ai-toolbar" aria-label="AI toolbar">
       <div class="ai-toolbar-left">
-        <span class="ai-toolbar-pill">AI Mode</span>
         <span class="ai-toolbar-text"><span id="showing-count">0</span> of <span id="total-count">0</span> shown</span>
-        <span class="ai-toolbar-subtext" id="ranking-label">Ranked by deal score</span>
-      </div>
-      <div class="ai-toolbar-right">
-        <span class="ai-toolbar-label">Persona</span>
         <span class="ai-toolbar-persona" id="persona-label">All</span>
-        <select id="sort-select" class="ai-select" aria-label="Sort">
-          <option value="">Top deals</option>
-          <option value="year">Newest year</option>
-          <option value="mileage">Lowest mileage</option>
-          <option value="price-asc">Lowest price</option>
-          <option value="price-desc">Highest price</option>
-        </select>
-        <button type="button" class="ai-toolbar-btn" id="compare-btn">
-          Compare <span class="ai-toolbar-badge" id="compare-count">0</span>
-        </button>
-        <button type="button" class="ai-toolbar-btn" id="saved-btn">
-          Saved <span class="ai-toolbar-badge" id="saved-count">0</span>
-        </button>
-        <button type="button" class="ai-toolbar-btn secondary" id="reset-btn">Reset</button>
+        <span class="ai-toolbar-subtext" id="ranking-label">Ranked by deal score</span>
       </div>
     </div>
 

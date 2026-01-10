@@ -50,6 +50,9 @@ const compareBtn = document.getElementById('compare-btn');
 const compareCountEl = document.getElementById('compare-count');
 const compareModal = document.getElementById('compare-modal');
 const compareBody = document.getElementById('compare-body');
+const filtersToggleBtn = document.getElementById('filters-toggle-btn');
+const filtersPanel = document.getElementById('filters-panel');
+const filtersCloseBtn = document.getElementById('filters-close-btn');
 let lastFocusedElement = null;
 let currentBriefCarId = null;
 
@@ -127,6 +130,42 @@ function setupEventListeners() {
             if (searchInput) searchInput.value = q.trim();
             applyFilters();
         });
+    });
+
+    const setFiltersOpen = (open) => {
+        if (!filtersPanel) return;
+        const shouldOpen = Boolean(open);
+        filtersPanel.classList.toggle('open', shouldOpen);
+        filtersPanel.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+        if (filtersToggleBtn) {
+            filtersToggleBtn.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            filtersToggleBtn.textContent = shouldOpen ? 'Close' : 'Filters';
+        }
+    };
+
+    if (filtersToggleBtn && filtersPanel) {
+        filtersToggleBtn.addEventListener('click', () => {
+            const isHidden = filtersPanel.getAttribute('aria-hidden') !== 'false';
+            setFiltersOpen(isHidden);
+        });
+    }
+
+    if (filtersCloseBtn && filtersPanel) {
+        filtersCloseBtn.addEventListener('click', () => setFiltersOpen(false));
+    }
+
+    if (filtersPanel) {
+        filtersPanel.addEventListener('click', (e) => {
+            const target = e.target?.closest?.('.cat-pill, .persona-pill');
+            if (!target) return;
+            setTimeout(() => setFiltersOpen(false), 0);
+        });
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (!filtersPanel) return;
+        if (filtersPanel.getAttribute('aria-hidden') === 'false') setFiltersOpen(false);
     });
 
     if (savedBtn) savedBtn.addEventListener('click', openSaved);
