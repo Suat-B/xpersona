@@ -15,6 +15,8 @@ let compare = new Set(JSON.parse(sessionStorage.getItem('compare') || '[]'));
 let aiLensExpanded = sessionStorage.getItem('aiLensExpanded') === '1';
 let lastNlSearch = null;
 let lastRawSearch = '';
+let pulseState = { newListings: [], priceDrops: [], priceIncreases: [], ts: 0 };
+let sharedShortlistIds = [];
 
 // DOM Elements
 const carGrid = document.getElementById('car-grid');
@@ -57,6 +59,10 @@ const filtersToggleBtn = document.getElementById('filters-toggle-btn');
 const filtersPanel = document.getElementById('filters-panel');
 const filtersCloseBtn = document.getElementById('filters-close-btn');
 const aiLens = document.getElementById('ai-lens');
+const pulseBtn = document.getElementById('pulse-btn');
+const pulseCountEl = document.getElementById('pulse-count');
+const pulseModal = document.getElementById('pulse-modal');
+const pulseBody = document.getElementById('pulse-body');
 let lastFocusedElement = null;
 let currentBriefCarId = null;
 
@@ -116,6 +122,7 @@ function hydrateFromUrlParams() {
         const persona = (params.get('persona') || '').trim();
         const body = (params.get('body') || '').trim();
         const sort = (params.get('sort') || '').trim();
+        const shortlistRaw = (params.get('shortlist') || '').trim();
 
         if (q && searchInput) searchInput.value = q;
         if (sort && sortSelect) sortSelect.value = sort;
@@ -135,6 +142,24 @@ function hydrateFromUrlParams() {
                 if (body !== '' && label.toLowerCase().includes(body.toLowerCase())) pill.classList.add('active');
             }
             if (body === '' && pills.length > 0) pills[0].classList.add('active');
+        }
+
+        if (shortlistRaw) {
+            const ids = shortlistRaw.split(',').map(s => s.trim()).filter(Boolean);
+            sharedShortlistIds = ids;
+            sessionStorage.setItem('sharedShortlistIds', JSON.stringify(ids));
+            aiLensExpanded = true;
+            sessionStorage.setItem('aiLensExpanded', '1');
+
+            params.delete('shortlist');
+            const next = params.toString();
+            const url = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash || ''}`;
+            window.history.replaceState({}, document.title, url);
+        } else {
+            try {
+                const saved = JSON.parse(sessionStorage.getItem('sharedShortlistIds') || '[]');
+                if (Array.isArray(saved)) sharedShortlistIds = saved;
+            } catch { }
         }
     } catch {
         return;
@@ -368,6 +393,7 @@ function setupEventListeners() {
 
     if (savedBtn) savedBtn.addEventListener('click', openSaved);
     if (headerSavedBtn) headerSavedBtn.addEventListener('click', openSaved);
+    if (pulseBtn) pulseBtn.addEventListener('click', openPulse);
     if (compareBtn) compareBtn.addEventListener('click', openCompare);
     if (resetBtn) resetBtn.addEventListener('click', clearAllFilters);
     if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearAllFilters);
@@ -386,6 +412,15 @@ function setupEventListeners() {
             const target = e.target;
             if (target && target.getAttribute && target.getAttribute('data-ai-modal-close') === 'true') {
                 closeCompare();
+            }
+        });
+    }
+
+    if (pulseModal) {
+        pulseModal.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target && target.getAttribute && target.getAttribute('data-ai-modal-close') === 'true') {
+                closePulse();
             }
         });
     }

@@ -872,6 +872,99 @@ button {
   font-size: 0.86rem;
 }
 
+.ai-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2200;
+}
+
+.ai-modal.open {
+  display: flex;
+}
+
+.ai-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.ai-modal-dialog {
+  position: relative;
+  width: min(980px, 94vw);
+  max-height: min(84vh, 820px);
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ai-modal-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ai-modal-kicker {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.ai-modal-title {
+  font-size: 1.15rem;
+  font-weight: 950;
+  letter-spacing: -0.4px;
+}
+
+.ai-modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.90);
+  font-weight: 900;
+}
+
+.ai-modal-body {
+  padding: 14px 16px 16px;
+  overflow: auto;
+}
+
+.ai-modal-footer {
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ai-modal-primary {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.04);
+  font-weight: 900;
+}
+
 .ai-similar-stack {
   display: flex;
   flex-direction: column;
