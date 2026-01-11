@@ -149,6 +149,10 @@ function setupEventListeners() {
                 renderDealBrief(carId);
                 return;
             }
+            if (action === 'brief') {
+                renderDealBrief(carId);
+                return;
+            }
             if (action === 'view') {
                 window.location.href = `details.html?id=${carId}`;
                 return;
