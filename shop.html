@@ -14,7 +14,16 @@
 
   <!-- Fixed Header -->
   <header class="header" id="header">
-    <a href="index.html" class="logo">xpersona</a>
+    <div class="header-left">
+      <a href="index.html" class="logo">xpersona</a>
+      <nav class="header-nav" aria-label="Primary">
+        <button type="button" class="header-nav-link" data-ai-nav="new">New</button>
+        <button type="button" class="header-nav-link" data-ai-nav="used">Used</button>
+        <button type="button" class="header-nav-link" data-ai-nav="ev">EV Deals</button>
+        <button type="button" class="header-nav-link" data-ai-nav="research">Research</button>
+        <button type="button" class="header-nav-link ai" data-ai-nav="shortlist">AI Shortlist</button>
+      </nav>
+    </div>
     <div class="header-right">
       <button type="button" class="header-action" id="compare-btn">
         Compare <span class="header-action-badge" id="compare-count">0</span>

@@ -12,6 +12,9 @@ let favorites = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
 const DOWN_PAYMENT_PERCENT = 0.15;
 let currentPersona = localStorage.getItem('persona') || 'all';
 let compare = new Set(JSON.parse(sessionStorage.getItem('compare') || '[]'));
+let aiLensExpanded = sessionStorage.getItem('aiLensExpanded') === '1';
+let lastNlSearch = null;
+let lastRawSearch = '';
 
 // DOM Elements
 const carGrid = document.getElementById('car-grid');
@@ -221,9 +224,100 @@ function setupEventListeners() {
                 return;
             }
 
-            if (action === 'explain') {
+            if (action === 'toggle') {
+                aiLensExpanded = !aiLensExpanded;
+                sessionStorage.setItem('aiLensExpanded', aiLensExpanded ? '1' : '0');
+                updateAiLens(lastNlSearch || parseNaturalLanguageSearch(lastRawSearch || ''), lastRawSearch || '');
+                if (aiLensExpanded) {
+                    const details = document.querySelector('.ai-search-details');
+                    if (details) details.open = true;
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            if (action === 'save-all') {
+                const top = filteredCars.slice(0, 5);
+                top.forEach((c) => {
+                    const id = c?.id;
+                    if (id == null) return;
+                    const key = Number.isNaN(Number(id)) ? String(id) : Number(id);
+                    if (!favorites.has(key)) toggleFavoriteById(id);
+                });
+                updateAiLens(lastNlSearch || parseNaturalLanguageSearch(lastRawSearch || ''), lastRawSearch || '');
+                return;
+            }
+
+            if (action === 'save-one') {
+                const carId = btn.getAttribute('data-ai-car-id');
+                if (!carId) return;
+                toggleFavoriteById(carId);
+                updateAiLens(lastNlSearch || parseNaturalLanguageSearch(lastRawSearch || ''), lastRawSearch || '');
+                return;
+            }
+
+            if (action === 'view') {
+                const carId = btn.getAttribute('data-ai-car-id');
+                if (!carId) return;
+                window.location.href = `details.html?id=${carId}`;
+                return;
+            }
+
+            if (action === 'brief') {
+                const carId = btn.getAttribute('data-ai-car-id');
+                if (!carId) return;
+                openDealBrief(carId);
+                return;
+            }
+        });
+    }
+
+    const headerNav = document.querySelector('.header-nav');
+    if (headerNav) {
+        headerNav.addEventListener('click', (e) => {
+            const btn = e.target?.closest?.('[data-ai-nav]');
+            const action = btn?.getAttribute?.('data-ai-nav');
+            if (!action) return;
+
+            const links = headerNav.querySelectorAll('.header-nav-link');
+            links.forEach(l => l.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (action === 'new') {
+                if (searchInput) searchInput.value = 'newish';
+                applyFilters();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            if (action === 'used') {
+                if (searchInput) searchInput.value = '';
+                selectPersona('all');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            if (action === 'ev') {
+                if (searchInput) searchInput.value = 'electric great deal';
+                selectPersona('ev');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            if (action === 'research') {
+                aiLensExpanded = true;
+                sessionStorage.setItem('aiLensExpanded', '1');
+                updateAiLens(lastNlSearch || parseNaturalLanguageSearch(lastRawSearch || ''), lastRawSearch || '');
                 const details = document.querySelector('.ai-search-details');
                 if (details) details.open = true;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            if (action === 'shortlist') {
+                aiLensExpanded = true;
+                sessionStorage.setItem('aiLensExpanded', '1');
+                updateAiLens(lastNlSearch || parseNaturalLanguageSearch(lastRawSearch || ''), lastRawSearch || '');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         });
@@ -537,18 +631,7 @@ function computeMedian(values) {
     return nums.length % 2 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
 }
 
-function updateAISearchCoach(nlSearch, rawSearch) {
-    const hint = document.querySelector('.ai-search-hint');
-    if (!hint) return;
-
-    const count = filteredCars.length;
-    const prices = filteredCars.map(c => Number(c.price || 0)).filter(v => v > 0);
-    const miles = filteredCars.map(c => Number(c.mileage || 0)).filter(v => v > 0);
-    const years = filteredCars.map(c => Number(c.year || c.carYear || 0)).filter(v => v > 0);
-    const medianPrice = computeMedian(prices);
-    const medianMiles = computeMedian(miles);
-    const medianYear = computeMedian(years);
-
+function buildAISearchSuggestions(nlSearch, rawSearch, count, medianPrice, medianMiles, medianYear) {
     const suggestions = [];
 
     const pushSuggestion = (q) => {
@@ -588,6 +671,23 @@ function updateAISearchCoach(nlSearch, rawSearch) {
                 ? 'Too many matches — try:'
                 : 'Try:';
 
+    return { label, suggestions };
+}
+
+function updateAISearchCoach(nlSearch, rawSearch) {
+    const hint = document.querySelector('.ai-search-hint');
+    if (!hint) return;
+
+    const count = filteredCars.length;
+    const prices = filteredCars.map(c => Number(c.price || 0)).filter(v => v > 0);
+    const miles = filteredCars.map(c => Number(c.mileage || 0)).filter(v => v > 0);
+    const years = filteredCars.map(c => Number(c.year || c.carYear || 0)).filter(v => v > 0);
+    const medianPrice = computeMedian(prices);
+    const medianMiles = computeMedian(miles);
+    const medianYear = computeMedian(years);
+
+    const { label, suggestions } = buildAISearchSuggestions(nlSearch, rawSearch, count, medianPrice, medianMiles, medianYear);
+
     const chipHtml = suggestions.slice(0, 4).map((q) => (
         `<button type="button" class="ai-query-chip" data-ai-query="${escapeHtml(q)}">${escapeHtml(q)}</button>`
     )).join('');
@@ -611,6 +711,15 @@ function formatPersonaLabel(persona) {
 function updateAiLens(nlSearch, rawSearch) {
     if (!aiLens) return;
 
+    const count = filteredCars.length;
+    const prices = filteredCars.map(c => Number(c.price || 0)).filter(v => v > 0);
+    const miles = filteredCars.map(c => Number(c.mileage || 0)).filter(v => v > 0);
+    const years = filteredCars.map(c => Number(c.year || c.carYear || 0)).filter(v => v > 0);
+    const medianPrice = computeMedian(prices);
+    const medianMiles = computeMedian(miles);
+    const medianYear = computeMedian(years);
+    const { suggestions } = buildAISearchSuggestions(nlSearch, rawSearch, count, medianPrice, medianMiles, medianYear);
+
     const chips = [];
     const addChip = (label) => {
         const s = String(label || '').trim();
@@ -630,7 +739,6 @@ function updateAiLens(nlSearch, rawSearch) {
     const kw = (nlSearch?.keywords || []).filter(Boolean);
     if (kw.length && String(rawSearch || '').length <= 40) addChip(kw.slice(0, 2).join(' '));
 
-    const count = filteredCars.length;
     const summary = count === 0
         ? 'No matches'
         : count === 1
@@ -639,18 +747,99 @@ function updateAiLens(nlSearch, rawSearch) {
 
     const chipHtml = chips.slice(0, 4).map(c => `<span class="ai-lens-chip">${escapeHtml(c)}</span>`).join('');
 
+    const rankingLine = currentPersona === 'all'
+        ? 'Ranking: deal score first, then affordability + signals'
+        : 'Ranking: persona fit first, then deal score';
+
+    const parsedParts = [];
+    if (filterBody?.value) parsedParts.push(filterBody.value);
+    if (nlSearch?.maxPrice) parsedParts.push(`under $${Number(nlSearch.maxPrice).toLocaleString()}`);
+    if (nlSearch?.minPrice) parsedParts.push(`over $${Number(nlSearch.minPrice).toLocaleString()}`);
+    if (nlSearch?.maxMonthly) parsedParts.push(`under $${Number(nlSearch.maxMonthly).toLocaleString()}/mo`);
+    if (nlSearch?.minYear) parsedParts.push(`${Number(nlSearch.minYear)}+`);
+    if (nlSearch?.maxMileage) parsedParts.push(`under ${Math.round(Number(nlSearch.maxMileage) / 1000)}k mi`);
+    const kwText = (nlSearch?.keywords || []).filter(Boolean).slice(0, 5).join(' ');
+    if (kwText) parsedParts.push(kwText);
+
+    const interpreted = parsedParts.length ? parsedParts.join(' • ') : 'No explicit constraints detected';
+
+    const refineHtml = suggestions.slice(0, 4).map((q) => (
+        `<button type="button" class="ai-lens-refine-chip ai-query-chip" data-ai-query="${escapeHtml(q)}">${escapeHtml(q)}</button>`
+    )).join('');
+
+    const expandedHtml = aiLensExpanded ? `
+      <div class="ai-lens-expand">
+        <div class="ai-lens-explain">
+          <div class="ai-lens-explain-title">What the AI is doing</div>
+          <div class="ai-lens-explain-text">${escapeHtml(rankingLine)}</div>
+          <div class="ai-lens-explain-text">Interpreted as: ${escapeHtml(interpreted)}</div>
+        </div>
+        ${suggestions.length ? `
+          <div class="ai-lens-refine">
+            <div class="ai-lens-refine-title">Refine in one tap</div>
+            <div class="ai-lens-refine-chips">${refineHtml}</div>
+          </div>
+        ` : ''}
+        <div class="ai-lens-shortlist">
+          <div class="ai-lens-shortlist-top">
+            <div class="ai-lens-shortlist-title">AI Shortlist</div>
+            <button type="button" class="ai-lens-btn" data-ai-lens-action="save-all">Save top 5</button>
+          </div>
+          <div class="ai-lens-shortlist-note">Top picks for your current lens, with quick actions.</div>
+          <div class="ai-lens-shortlist-rows">
+            ${filteredCars.slice(0, 5).map((c) => {
+                const title = escapeHtml(`${c.year || ''} ${c.make || ''} ${c.model || ''}`.trim());
+                const meta = escapeHtml(`${Math.round(Number(c.mileage || 0) / 1000)}k miles • $${Number(c.price || 0).toLocaleString()}`);
+                const img = escapeHtml(c.imageUrl || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800');
+                const diff = c.priceDifferential != null && !Number.isNaN(Number(c.priceDifferential)) ? Number(c.priceDifferential) : null;
+                const deal = escapeHtml(formatDealRating(c.dealRating) || 'No Price Analysis');
+                const persona = currentPersona !== 'all' ? getPersonaMatch(c) : null;
+                const reasons = [];
+                if (persona) reasons.push(`${formatPersonaLabel(currentPersona)} match ${persona.score}`);
+                if (deal && deal !== 'No Price Analysis') reasons.push(deal);
+                if (diff != null && diff > 0) reasons.push(`${money(Math.round(diff))} below market`);
+                if (diff != null && diff < 0) reasons.push(`${money(Math.abs(Math.round(diff)))} above market`);
+                const savedKey = Number.isNaN(Number(c.id)) ? String(c.id) : Number(c.id);
+                const isSaved = favorites.has(savedKey);
+                const reasonsHtml = reasons.length
+                    ? `<div class="match-reasons">${reasons.slice(0, 2).map(r => `<span class="match-reason-pill">${escapeHtml(r)}</span>`).join('')}</div>`
+                    : '';
+                return `
+                  <div class="saved-row">
+                    <div class="saved-thumb"><img src="${img}" alt="${title}" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous"></div>
+                    <div>
+                      <div class="saved-title">${title}</div>
+                      <div class="saved-meta">${meta}</div>
+                      ${reasonsHtml}
+                    </div>
+                    <div class="saved-actions">
+                      <button type="button" class="saved-action" data-ai-lens-action="save-one" data-ai-car-id="${escapeHtml(String(c.id))}">${isSaved ? 'Saved' : 'Save'}</button>
+                      <button type="button" class="saved-action" data-ai-lens-action="brief" data-ai-car-id="${escapeHtml(String(c.id))}">Brief</button>
+                      <button type="button" class="saved-action" data-ai-lens-action="view" data-ai-car-id="${escapeHtml(String(c.id))}">View</button>
+                    </div>
+                  </div>
+                `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    ` : '';
+
     aiLens.innerHTML = `
       <div class="ai-lens-left">
-        <div class="ai-lens-title">AI Lens</div>
-        <div class="ai-lens-meta">${escapeHtml(summary)} • ranked by fit + value</div>
+        <button type="button" class="ai-lens-title-btn" data-ai-lens-action="toggle">AI Lens</button>
+        <button type="button" class="ai-lens-meta-btn" data-ai-lens-action="toggle">${escapeHtml(summary)} • ranked by fit + value</button>
       </div>
       <div class="ai-lens-chips">${chipHtml}</div>
       <div class="ai-lens-actions">
-        <button type="button" class="ai-lens-btn" data-ai-lens-action="explain">Why?</button>
+        <button type="button" class="ai-lens-btn" data-ai-lens-action="toggle">${aiLensExpanded ? 'Hide' : 'Why?'}</button>
         <button type="button" class="ai-lens-btn" data-ai-lens-action="edit">Edit</button>
         <button type="button" class="ai-lens-btn secondary" data-ai-lens-action="reset">Reset</button>
       </div>
+      ${expandedHtml}
     `;
+
+    bindAiQueryChips(aiLens);
 }
 
 function applyFilters() {
@@ -665,6 +854,8 @@ function applyFilters() {
 
     // Parse natural language search
     const nlSearch = parseNaturalLanguageSearch(rawSearch);
+    lastNlSearch = nlSearch;
+    lastRawSearch = rawSearch;
     const searchKeywords = nlSearch.keywords.join(' ').toLowerCase();
 
     filteredCars = allCars.filter(car => {
