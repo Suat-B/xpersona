@@ -17,6 +17,8 @@ let lastNlSearch = null;
 let lastRawSearch = '';
 let pulseState = { newListings: [], priceDrops: [], priceIncreases: [], ts: 0 };
 let sharedShortlistIds = [];
+const PULSE_STATE_KEY = 'pulseStateV1';
+const PULSE_LAST_PRICE_KEY = 'pulseLastPricesV1';
 
 // DOM Elements
 const carGrid = document.getElementById('car-grid');
@@ -101,10 +103,136 @@ function createToastContainer() {
     return container;
 }
 
+function loadStoredJson(key, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed ?? fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function persistStoredJson(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch { }
+}
+
+function buildShortlistLink(ids) {
+    const clean = Array.from(new Set((ids || []).map(v => String(v).trim()).filter(Boolean))).slice(0, 40);
+    if (clean.length === 0) return '';
+
+    const params = new URLSearchParams();
+    if (searchInput?.value) params.set('q', String(searchInput.value || '').trim());
+    if (currentPersona) params.set('persona', String(currentPersona));
+    if (filterBody?.value) params.set('body', String(filterBody.value));
+    if (sortSelect?.value) params.set('sort', String(sortSelect.value));
+    params.set('shortlist', clean.join(','));
+
+    return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+}
+
+async function copyTextToClipboard(text) {
+    const value = String(text || '');
+    if (!value) return false;
+
+    try {
+        if (navigator?.clipboard?.writeText && window.isSecureContext) {
+            await navigator.clipboard.writeText(value);
+            return true;
+        }
+    } catch { }
+
+    try {
+        const el = document.createElement('textarea');
+        el.value = value;
+        el.setAttribute('readonly', '');
+        el.style.position = 'fixed';
+        el.style.left = '-9999px';
+        el.style.top = '0';
+        document.body.appendChild(el);
+        el.select();
+        el.setSelectionRange(0, el.value.length);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(el);
+        return !!ok;
+    } catch {
+        return false;
+    }
+}
+
+function getPriceHistoryPeak(car) {
+    const history = car?.priceHistory;
+    if (!Array.isArray(history) || history.length === 0) return null;
+    let peak = null;
+    for (const entry of history) {
+        const price = Number(entry?.price || 0);
+        if (!price || price <= 0) continue;
+        if (peak == null || price > peak) peak = price;
+    }
+    return peak;
+}
+
+function refreshPulseFromData() {
+    if (!Array.isArray(allCars) || allCars.length === 0) {
+        updatePulseCount();
+        return;
+    }
+
+    const lastPrices = loadStoredJson(PULSE_LAST_PRICE_KEY, {});
+    const trackedIds = new Set();
+
+    for (const id of favorites) trackedIds.add(String(id));
+    for (const id of compare) trackedIds.add(String(id));
+    for (const id of sharedShortlistIds) trackedIds.add(String(id));
+
+    const priceDrops = [];
+    const priceIncreases = [];
+
+    for (const id of trackedIds) {
+        const car = allCars.find(c => String(c.id) === String(id));
+        if (!car) continue;
+
+        const currentPrice = Number(car.price || 0);
+        if (!currentPrice || currentPrice <= 0) continue;
+
+        const historyPeak = getPriceHistoryPeak(car);
+        const storedPrevious = lastPrices?.[id] != null ? Number(lastPrices[id]) : null;
+        const previousPrice = (historyPeak != null && historyPeak > currentPrice)
+            ? historyPeak
+            : (storedPrevious != null && !Number.isNaN(storedPrevious) && storedPrevious > 0 ? storedPrevious : null);
+
+        if (previousPrice != null && previousPrice !== currentPrice) {
+            const delta = previousPrice - currentPrice;
+            if (delta > 0) {
+                priceDrops.push({ id, from: previousPrice, to: currentPrice, delta, ts: Date.now() });
+            } else if (delta < 0) {
+                priceIncreases.push({ id, from: previousPrice, to: currentPrice, delta: Math.abs(delta), ts: Date.now() });
+            }
+        }
+
+        lastPrices[id] = currentPrice;
+    }
+
+    pulseState = {
+        newListings: [],
+        priceDrops: priceDrops.sort((a, b) => b.delta - a.delta).slice(0, 20),
+        priceIncreases: priceIncreases.sort((a, b) => b.delta - a.delta).slice(0, 20),
+        ts: Date.now()
+    };
+
+    persistStoredJson(PULSE_LAST_PRICE_KEY, lastPrices);
+    persistStoredJson(PULSE_STATE_KEY, pulseState);
+    updatePulseCount();
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
+    pulseState = loadStoredJson(PULSE_STATE_KEY, pulseState);
     hydrateFromUrlParams();
     setupEventListeners();
     setupHeaderScroll();
@@ -113,6 +241,7 @@ async function init() {
     syncPersonaUI();
     updateSavedCount();
     updateCompareCount();
+    refreshPulseFromData();
 }
 
 function hydrateFromUrlParams() {
@@ -150,6 +279,7 @@ function hydrateFromUrlParams() {
             sessionStorage.setItem('sharedShortlistIds', JSON.stringify(ids));
             aiLensExpanded = true;
             sessionStorage.setItem('aiLensExpanded', '1');
+            refreshPulseFromData();
 
             params.delete('shortlist');
             const next = params.toString();
@@ -331,6 +461,47 @@ function setupEventListeners() {
                 openDealBrief(carId);
                 return;
             }
+
+            if (action === 'share-shortlist') {
+                const ids = (Array.isArray(sharedShortlistIds) && sharedShortlistIds.length)
+                    ? sharedShortlistIds
+                    : (favorites.size ? [...favorites] : filteredCars.slice(0, 5).map(c => c?.id));
+
+                const link = buildShortlistLink(ids);
+                if (!link) {
+                    showToast('Nothing to share yet', 'info', 2000);
+                    return;
+                }
+
+                copyTextToClipboard(link).then((ok) => {
+                    if (ok) showToast('Shortlist link copied', 'success', 2200);
+                    else window.prompt('Copy this link:', link);
+                });
+
+                return;
+            }
+
+            if (action === 'save-shared') {
+                if (!Array.isArray(sharedShortlistIds) || sharedShortlistIds.length === 0) {
+                    showToast('No shared shortlist active', 'info', 2000);
+                    return;
+                }
+                for (const id of sharedShortlistIds.slice(0, 60)) {
+                    const key = Number.isNaN(Number(id)) ? String(id) : Number(id);
+                    if (!favorites.has(key)) toggleFavoriteById(id);
+                }
+                showToast('Shared shortlist saved', 'success', 2200);
+                updateAiLens(lastNlSearch || parseNaturalLanguageSearch(lastRawSearch || ''), lastRawSearch || '');
+                return;
+            }
+
+            if (action === 'clear-shared') {
+                sharedShortlistIds = [];
+                try { sessionStorage.removeItem('sharedShortlistIds'); } catch { }
+                refreshPulseFromData();
+                showToast('Shared shortlist cleared', 'info', 2000);
+                updateAiLens(lastNlSearch || parseNaturalLanguageSearch(lastRawSearch || ''), lastRawSearch || '');
+            }
         });
     }
 
@@ -412,6 +583,26 @@ function setupEventListeners() {
             const target = e.target;
             if (target && target.getAttribute && target.getAttribute('data-ai-modal-close') === 'true') {
                 closeCompare();
+            }
+        });
+    }
+
+    if (pulseBody) {
+        pulseBody.addEventListener('click', (e) => {
+            const target = e.target?.closest?.('[data-ai-action]');
+            if (!target) return;
+            const action = target.getAttribute('data-ai-action');
+            const carId = target.getAttribute('data-ai-car-id');
+            if (!action || !carId) return;
+
+            if (action === 'brief') {
+                closePulse();
+                openDealBrief(carId);
+                return;
+            }
+
+            if (action === 'view') {
+                window.location.href = `details.html?id=${carId}`;
             }
         });
     }
@@ -839,8 +1030,23 @@ function updateAiLens(nlSearch, rawSearch) {
         `<button type="button" class="ai-lens-refine-chip ai-query-chip" data-ai-query="${escapeHtml(q)}">${escapeHtml(q)}</button>`
     )).join('');
 
+    const sharedActive = Array.isArray(sharedShortlistIds) && sharedShortlistIds.length > 0;
+    const sharedSummary = sharedActive ? 'shared shortlist active' : 'ranked by fit + value';
+
+    const sharedHtml = sharedActive ? `
+      <div class="ai-lens-explain">
+        <div class="ai-lens-explain-title">Shared shortlist</div>
+        <div class="ai-lens-explain-text">${sharedShortlistIds.length.toLocaleString()} cars from a shared link are being tracked.</div>
+        <div class="ai-lens-actions" style="justify-content:flex-start; padding: 10px 0 0;">
+          <button type="button" class="ai-lens-btn" data-ai-lens-action="save-shared">Save all</button>
+          <button type="button" class="ai-lens-btn secondary" data-ai-lens-action="clear-shared">Clear</button>
+        </div>
+      </div>
+    ` : '';
+
     const expandedHtml = aiLensExpanded ? `
       <div class="ai-lens-expand">
+        ${sharedHtml}
         <div class="ai-lens-explain">
           <div class="ai-lens-explain-title">What the AI is doing</div>
           <div class="ai-lens-explain-text">${escapeHtml(rankingLine)}</div>
@@ -855,7 +1061,10 @@ function updateAiLens(nlSearch, rawSearch) {
         <div class="ai-lens-shortlist">
           <div class="ai-lens-shortlist-top">
             <div class="ai-lens-shortlist-title">AI Shortlist</div>
-            <button type="button" class="ai-lens-btn" data-ai-lens-action="save-all">Save top 5</button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+              <button type="button" class="ai-lens-btn" data-ai-lens-action="share-shortlist">Copy link</button>
+              <button type="button" class="ai-lens-btn" data-ai-lens-action="save-all">Save top 5</button>
+            </div>
           </div>
           <div class="ai-lens-shortlist-note">Top picks for your current lens, with quick actions.</div>
           <div class="ai-lens-shortlist-rows">
@@ -900,7 +1109,7 @@ function updateAiLens(nlSearch, rawSearch) {
     aiLens.innerHTML = `
       <div class="ai-lens-left">
         <button type="button" class="ai-lens-title-btn" data-ai-lens-action="toggle">AI Lens</button>
-        <button type="button" class="ai-lens-meta-btn" data-ai-lens-action="toggle">${escapeHtml(summary)} • ranked by fit + value</button>
+        <button type="button" class="ai-lens-meta-btn" data-ai-lens-action="toggle">${escapeHtml(summary)} • ${escapeHtml(sharedSummary)}</button>
       </div>
       <div class="ai-lens-chips">${chipHtml}</div>
       <div class="ai-lens-actions">
@@ -1517,6 +1726,7 @@ function toggleCompare(id, btn) {
         showToast('Removed from compare', 'info', 2000);
         updateCompareCount();
         persistCompare();
+        refreshPulseFromData();
         return;
     }
 
@@ -1548,6 +1758,7 @@ function toggleCompare(id, btn) {
     showToast('Added to compare', 'success', 2000);
     updateCompareCount();
     persistCompare();
+    refreshPulseFromData();
 }
 
 function updateCompareCount() {
@@ -1556,6 +1767,14 @@ function updateCompareCount() {
         const count = compare.size;
         animateValue(compareCountEl, parseInt(compareCountEl.textContent) || 0, count, 300);
     }
+}
+
+function updatePulseCount() {
+    if (!pulseCountEl) return;
+    const drops = Array.isArray(pulseState?.priceDrops) ? pulseState.priceDrops.length : 0;
+    const increases = Array.isArray(pulseState?.priceIncreases) ? pulseState.priceIncreases.length : 0;
+    const count = drops + increases;
+    animateValue(pulseCountEl, parseInt(pulseCountEl.textContent) || 0, count, 250);
 }
 
 function openCompare() {
@@ -1705,10 +1924,97 @@ function closeSaved() {
     if (lastFocusedElement && lastFocusedElement.focus) lastFocusedElement.focus();
 }
 
+function openPulse() {
+    if (!pulseModal || !pulseBody) return;
+
+    refreshPulseFromData();
+
+    lastFocusedElement = document.activeElement;
+
+    const trackedCount = favorites.size + compare.size + (Array.isArray(sharedShortlistIds) ? sharedShortlistIds.length : 0);
+    const dropCount = Array.isArray(pulseState?.priceDrops) ? pulseState.priceDrops.length : 0;
+    const increaseCount = Array.isArray(pulseState?.priceIncreases) ? pulseState.priceIncreases.length : 0;
+
+    const renderEventRow = (evt, label) => {
+        const car = allCars.find(c => String(c.id) === String(evt.id));
+        if (!car) return '';
+        const title = escapeHtml(`${car.year || ''} ${car.make || ''} ${car.model || ''}`.trim());
+        const img = escapeHtml(car.imageUrl || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800');
+        const miles = Math.round(Number(car.mileage || 0) / 1000);
+        const meta = escapeHtml(`${Number.isFinite(miles) ? `${miles}k miles` : '--'} • ${money(Number(car.price || 0))}`);
+        const delta = money(Math.round(Number(evt.delta || 0)));
+        return `
+          <div class="saved-row">
+            <div class="saved-thumb"><img src="${img}" alt="${title}" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous"></div>
+            <div>
+              <div class="saved-title">${title}</div>
+              <div class="saved-meta">${meta}</div>
+              <div class="match-reasons">
+                <span class="match-reason-pill">${escapeHtml(label)} ${escapeHtml(delta)}</span>
+              </div>
+            </div>
+            <div class="saved-actions">
+              <button type="button" class="saved-action" data-ai-action="brief" data-ai-car-id="${escapeHtml(String(car.id))}">Brief</button>
+              <button type="button" class="saved-action" data-ai-action="view" data-ai-car-id="${escapeHtml(String(car.id))}">View</button>
+            </div>
+          </div>
+        `;
+    };
+
+    const dropsHtml = dropCount
+        ? pulseState.priceDrops.map(evt => renderEventRow(evt, 'Price dropped')).join('')
+        : `
+          <div class="ai-brief-card">
+            <div class="ai-brief-label">No price drops yet</div>
+            <div class="ai-brief-note">Pulse will light up when saved/compared cars change price.</div>
+          </div>
+        `;
+
+    const increasesHtml = increaseCount
+        ? pulseState.priceIncreases.map(evt => renderEventRow(evt, 'Price increased')).join('')
+        : '';
+
+    pulseBody.innerHTML = `
+      <div class="ai-brief-card">
+        <div class="ai-brief-label">Pulse Summary</div>
+        <div class="ai-brief-value">${favorites.size.toLocaleString()} saved • ${compare.size.toLocaleString()} compared</div>
+        <div class="ai-brief-note">${dropCount.toLocaleString()} drops • ${increaseCount.toLocaleString()} increases • tracking ${trackedCount.toLocaleString()} cars</div>
+      </div>
+      <div class="ai-brief-card">
+        <div class="ai-brief-label">Price Drop Pulse</div>
+        <div class="ai-brief-note">Signals from the cars you’re actively watching.</div>
+        <div class="ai-similar-stack">${dropsHtml}</div>
+      </div>
+      ${increaseCount ? `
+        <div class="ai-brief-card">
+          <div class="ai-brief-label">Price Increases</div>
+          <div class="ai-brief-note">Heads up: some listings are moving up.</div>
+          <div class="ai-similar-stack">${increasesHtml}</div>
+        </div>
+      ` : ''}
+    `;
+
+    pulseModal.classList.add('open');
+    pulseModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    const closeBtn = pulseModal.querySelector('[data-ai-modal-close="true"]');
+    if (closeBtn && closeBtn.focus) closeBtn.focus();
+}
+
+function closePulse() {
+    if (!pulseModal) return;
+    pulseModal.classList.remove('open');
+    pulseModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocusedElement && lastFocusedElement.focus) lastFocusedElement.focus();
+}
+
 function removeSaved(id) {
     favorites.delete(id);
     localStorage.setItem('favorites', JSON.stringify([...favorites]));
     updateSavedCount();
+    refreshPulseFromData();
     openSaved();
 }
 
@@ -1730,11 +2036,13 @@ function toggleFavoriteById(id) {
         favorites.delete(storedKey);
         localStorage.setItem('favorites', JSON.stringify([...favorites]));
         updateSavedCount();
+        refreshPulseFromData();
         return false;
     }
     favorites.add(storedKey);
     localStorage.setItem('favorites', JSON.stringify([...favorites]));
     updateSavedCount();
+    refreshPulseFromData();
     return true;
 }
 
@@ -2024,6 +2332,55 @@ function renderDealBrief(carId) {
       </div>
     `;
 
+    const similar = getSimilarPicks(car, 5);
+    const compPrices = similar.map(s => Number(s?.car?.price || 0)).filter(p => p > 0);
+    const compMin = compPrices.length ? Math.min(...compPrices) : null;
+    const compMax = compPrices.length ? Math.max(...compPrices) : null;
+    const compAvg = compPrices.length ? Math.round(compPrices.reduce((a, b) => a + b, 0) / compPrices.length) : null;
+
+    const marketAvg = (diff != null && !Number.isNaN(diff)) ? (price + diff) : null;
+    const anchor = (compAvg != null && compAvg > 0) ? compAvg : ((marketAvg != null && marketAvg > 0) ? marketAvg : null);
+
+    let startOffer = price;
+    if (anchor != null && anchor > 0) {
+        if (price > anchor) startOffer = anchor;
+        else startOffer = price - clamp((anchor - price) * 0.12, 250, 900);
+    }
+    if (days != null && !Number.isNaN(days) && days >= 70) startOffer -= 350;
+    if (days != null && !Number.isNaN(days) && days >= 90) startOffer -= 450;
+    startOffer = clamp(Math.round(startOffer / 50) * 50, 0, price);
+
+    const aimOffer = clamp(Math.round((startOffer + 700) / 50) * 50, 0, price);
+    const maxPayBase = anchor != null && anchor > 0 ? Math.min(price, anchor + 600) : price;
+    const maxPay = clamp(Math.round(maxPayBase / 50) * 50, 0, price);
+
+    const leverage = [];
+    if (diff != null && !Number.isNaN(diff) && diff > 0) leverage.push(`${money(Math.round(diff))} below market`);
+    if (diff != null && !Number.isNaN(diff) && diff < 0) leverage.push(`${money(Math.abs(Math.round(diff)))} above market`);
+    if (days != null && !Number.isNaN(days) && days >= 60) leverage.push(`${Math.round(days)} days on market`);
+    if (dealRatingText && dealRatingText.includes('Great')) leverage.push('Great deal rating');
+    if (dealRatingText && dealRatingText.includes('Good')) leverage.push('Good deal rating');
+    if (compAvg != null && compMin != null && compMax != null) leverage.push(`Comps ${money(compMin)}–${money(compMax)}`);
+
+    const compsHtml = compAvg != null && compMin != null && compMax != null ? `
+      <div class="ai-brief-card">
+        <div class="ai-brief-label">Comps</div>
+        <div class="ai-brief-value">${money(compAvg)} avg</div>
+        <div class="ai-brief-note">${money(compMin)}–${money(compMax)} from similar picks in this inventory.</div>
+      </div>
+    ` : '';
+
+    const negotiationScript = escapeHtml(`Hi ${car.dealer?.name ? car.dealer.name : 'there'} — I'm interested in this ${title}. If you can do ${money(aimOffer)} out-the-door, I can come in today. Can you send the full OTD breakdown (tax/title/fees) and confirm it's still available?`);
+
+    const negotiationHtml = `
+      <div class="ai-brief-card">
+        <div class="ai-brief-label">Negotiation Plan</div>
+        <div class="ai-brief-value">Start ${money(startOffer)} • Aim ${money(aimOffer)} • Max ${money(maxPay)}</div>
+        <div class="ai-brief-note">${leverage.length ? `Based on: ${escapeHtml(leverage.slice(0, 4).join(' • '))}` : 'Based on market + inventory signals.'}</div>
+        <div class="ai-brief-note"><span class="ai-inline-label">Text:</span> ${negotiationScript}</div>
+      </div>
+    `;
+
     const flagsHtml = `
       <div class="ai-brief-card">
         <div class="ai-brief-label">Risk Flags</div>
@@ -2056,13 +2413,12 @@ function renderDealBrief(carId) {
       </div>
     `;
 
-    const similar = getSimilarPicks(car, 3);
     const similarHtml = similar.length ? `
       <div class="ai-brief-card">
         <div class="ai-brief-label">AI Similar Picks</div>
         <div class="ai-brief-note">Comparable listings from this inventory, with reasons.</div>
         <div class="ai-similar-stack">
-          ${similar.map((s) => {
+          ${similar.slice(0, 3).map((s) => {
             const c = s.car;
             const title = escapeHtml(`${c.year || ''} ${c.make || ''} ${c.model || ''}`.trim());
             const meta = escapeHtml(`${Math.round(Number(c.mileage || 0) / 1000)}k miles • $${Number(c.price || 0).toLocaleString()}`);
@@ -2089,7 +2445,7 @@ function renderDealBrief(carId) {
       </div>
     ` : '';
 
-    aiBriefBody.innerHTML = summaryBadges + metersHtml + metricsHtml + flagsHtml + actionsHtml + questionsHtml + similarHtml;
+    aiBriefBody.innerHTML = summaryBadges + metersHtml + metricsHtml + negotiationHtml + compsHtml + flagsHtml + actionsHtml + questionsHtml + similarHtml;
 }
 
 function openDealBrief(carId) {
