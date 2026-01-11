@@ -10,17 +10,21 @@
     /* Inline minimal CSS for landing page to import minimal resources */
     :root {
       --bg-primary: #ffffff;
-      --text-primary: #111111;
-      --text-secondary: #555555;
-      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --border: rgba(17, 17, 17, 0.10);
-      --card: rgba(255, 255, 255, 0.86);
-      --shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-      --shadow-sm: 0 12px 30px rgba(0, 0, 0, 0.10);
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-muted: #86868b;
+      --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      --border: rgba(0, 0, 0, 0.08);
+      --card: rgba(255, 255, 255, 0.72);
+      --shadow: 0 12px 48px rgba(0, 0, 0, 0.16);
+      --shadow-sm: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
       --radius: 20px;
-      --accent: #000000;
-      --accent-blue: #2563eb;
-      --danger: #dc2626;
+      --accent: #1d1d1f;
+      --accent-blue: #0071e3;
+      --danger: #ff3b30;
+      --transition: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      --glass-bg: rgba(255, 255, 255, 0.72);
+      --glass-blur: blur(20px) saturate(180%);
     }
 
     * {
@@ -37,6 +41,9 @@
       flex-direction: column;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.011em;
+      line-height: 1.5;
     }
 
     a {
@@ -109,21 +116,27 @@
     .nav-link {
       display: inline-flex;
       align-items: center;
-      padding: 8px 12px;
+      padding: 8px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       color: rgba(255, 255, 255, 0.92);
-      font-weight: 650;
+      font-weight: 600;
       font-size: 0.9rem;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      transition: transform 0.2s, background-color 0.2s;
+      transition: all var(--transition);
+      letter-spacing: -0.1px;
     }
 
     .nav-link:hover {
-      transform: translateY(-1px);
-      background: rgba(255, 255, 255, 0.14);
+      transform: translateY(-2px) scale(1.02);
+      background: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-link:active {
+      transform: translateY(0) scale(0.98);
     }
 
     .kicker {
@@ -146,7 +159,7 @@
 
     h1 {
       font-size: 2.7rem;
-      font-weight: 850;
+      font-weight: 800;
       letter-spacing: -1.2px;
       line-height: 1.05;
     }
@@ -196,9 +209,9 @@
     .btn-shop,
     .btn-ghost {
       background: #ffffff;
-      color: #111111;
-      border: 1px solid rgba(255, 255, 255, 0.26);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+      color: #1d1d1f;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
     }
 
     .btn-ghost {
@@ -218,7 +231,12 @@
     }
 
     .btn:hover {
-      transform: translateY(-1px);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn:active {
+      transform: translateY(0) scale(0.98);
     }
 
     .hero-metrics {
@@ -233,14 +251,22 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 12px;
+      padding: 10px 14px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.10);
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       color: rgba(255, 255, 255, 0.9);
       font-size: 0.9rem;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      font-weight: 500;
+      letter-spacing: -0.1px;
+      transition: all var(--transition);
+    }
+
+    .metric-pill:hover {
+      transform: translateY(-1px) scale(1.02);
+      background: rgba(255, 255, 255, 0.2);
     }
 
     .metric-pill strong {
@@ -294,9 +320,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      font-weight: 800;
-      letter-spacing: -0.4px;
-      margin-bottom: 6px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      line-height: 1.2;
     }
 
     .chip {
@@ -412,9 +439,14 @@
     }
 
     .btn-form:hover {
-      transform: translateY(-1px);
+      transform: translateY(-2px) scale(1.02);
       background: #000;
       border-color: #000;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-form:active {
+      transform: translateY(0) scale(0.98);
     }
 
     .btn-form.secondary {

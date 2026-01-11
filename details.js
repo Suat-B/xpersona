@@ -24,10 +24,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         renderCarDetails();
+        setupAnimations();
+        setupParallax();
     } catch (error) {
         console.error('Error loading car details:', error);
     }
 });
+
+// Staggered content reveal animation
+function setupAnimations() {
+    const sections = document.querySelectorAll('.info-section, .quick-stats, .price-card, .contact-card');
+    sections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            section.style.transition = 'opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+}
+
+// Parallax effect on scroll
+function setupParallax() {
+    const galleryWrapper = document.querySelector('.gallery-main-wrapper');
+    if (!galleryWrapper) return;
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                const scrolled = window.pageYOffset;
+                const rate = scrolled * 0.3;
+                if (galleryWrapper) {
+                    galleryWrapper.style.transform = `translateY(${rate}px)`;
+                }
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+}
 
 function renderCarDetails() {
     // Normalize data

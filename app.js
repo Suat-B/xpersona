@@ -926,10 +926,27 @@ function applyFilters() {
     updateAISearchCoach(nlSearch, rawSearch);
     updateAiLens(nlSearch, rawSearch);
 
-    // Reset and render first batch
+    // Reset and render first batch with smooth transition
     displayedCount = 0;
-    carGrid.innerHTML = '';
-    loadMoreCars();
+    
+    // Fade out existing cards
+    const existingCards = Array.from(carGrid.children);
+    existingCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                if (card.parentNode) card.remove();
+            }, 200);
+        }, index * 10);
+    });
+
+    // Clear grid after fade out
+    setTimeout(() => {
+        carGrid.innerHTML = '';
+        loadMoreCars();
+    }, existingCards.length * 10 + 200);
 }
 
 function loadMoreCars() {
@@ -943,10 +960,12 @@ function loadMoreCars() {
         const batch = filteredCars.slice(displayedCount, displayedCount + batchSize);
         const fragment = document.createDocumentFragment();
 
-        batch.forEach(car => {
+        batch.forEach((car, index) => {
             const article = document.createElement('article');
             article.className = 'car-card';
             article.innerHTML = createCarCardHTML(car);
+            article.style.opacity = '0';
+            article.style.transform = 'translateY(20px)';
             article.addEventListener('click', () => {
                 window.location.href = `details.html?id=${car.id}`;
             });
@@ -954,16 +973,32 @@ function loadMoreCars() {
         });
 
         carGrid.appendChild(fragment);
+
+        // Staggered entrance animation
+        const cards = Array.from(carGrid.children).slice(displayedCount);
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 30); // 30ms delay between each card
+        });
+
         displayedCount += batch.length;
 
-        // Update counts
-        if (showingCount) showingCount.textContent = displayedCount.toLocaleString();
-        if (totalCount) totalCount.textContent = filteredCars.length.toLocaleString();
+        // Update counts with smooth animation
+        if (showingCount) {
+            animateValue(showingCount, parseInt(showingCount.textContent.replace(/,/g, '')) || 0, displayedCount, 300);
+        }
+        if (totalCount) {
+            animateValue(totalCount, parseInt(totalCount.textContent.replace(/,/g, '')) || 0, filteredCars.length, 300);
+        }
 
         // Handle empty state
         if (emptyState) {
             if (filteredCars.length === 0) {
                 emptyState.style.display = 'block';
+                emptyState.style.animation = 'fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             } else {
                 emptyState.style.display = 'none';
             }
@@ -976,6 +1011,30 @@ function loadMoreCars() {
 
         isLoading = false;
     });
+}
+
+// Smooth number animation helper
+function animateValue(element, start, end, duration) {
+    if (!element) return;
+    const startTime = performance.now();
+    const endValue = end;
+    const startValue = start;
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+        const current = Math.round(startValue + (endValue - startValue) * easeOut);
+        element.textContent = current.toLocaleString();
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = endValue.toLocaleString();
+        }
+    }
+    
+    requestAnimationFrame(update);
 }
 
 function createCarCardHTML(car) {
