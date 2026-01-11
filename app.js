@@ -176,6 +176,14 @@ function setupEventListeners() {
         }
     };
 
+    const mq = window.matchMedia ? window.matchMedia('(min-width: 1025px)') : null;
+    if (mq) {
+        setFiltersOpen(mq.matches);
+        const onChange = (e) => setFiltersOpen(e.matches);
+        if (mq.addEventListener) mq.addEventListener('change', onChange);
+        else if (mq.addListener) mq.addListener(onChange);
+    }
+
     if (filtersToggleBtn && filtersPanel) {
         filtersToggleBtn.addEventListener('click', () => {
             const isHidden = filtersPanel.getAttribute('aria-hidden') !== 'false';
