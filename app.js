@@ -53,6 +53,7 @@ const compareBody = document.getElementById('compare-body');
 const filtersToggleBtn = document.getElementById('filters-toggle-btn');
 const filtersPanel = document.getElementById('filters-panel');
 const filtersCloseBtn = document.getElementById('filters-close-btn');
+const aiLens = document.getElementById('ai-lens');
 let lastFocusedElement = null;
 let currentBriefCarId = null;
 
@@ -160,14 +161,7 @@ function setupEventListeners() {
         });
     }
 
-    const queryChips = document.querySelectorAll('.ai-query-chip');
-    queryChips.forEach((chip) => {
-        chip.addEventListener('click', () => {
-            const q = chip.getAttribute('data-ai-query') || chip.textContent || '';
-            if (searchInput) searchInput.value = q.trim();
-            applyFilters();
-        });
-    });
+    bindAiQueryChips(document);
 
     const setFiltersOpen = (open) => {
         if (!filtersPanel) return;
@@ -204,6 +198,34 @@ function setupEventListeners() {
             const target = e.target?.closest?.('.cat-pill, .persona-pill');
             if (!target) return;
             setTimeout(() => setFiltersOpen(false), 0);
+        });
+    }
+
+    if (aiLens) {
+        aiLens.addEventListener('click', (e) => {
+            const btn = e.target?.closest?.('[data-ai-lens-action]');
+            const action = btn?.getAttribute?.('data-ai-lens-action');
+            if (!action) return;
+
+            if (action === 'reset') {
+                clearAllFilters();
+                return;
+            }
+
+            if (action === 'edit') {
+                if (searchInput) {
+                    searchInput.focus();
+                    searchInput.select?.();
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            if (action === 'explain') {
+                const details = document.querySelector('.ai-search-details');
+                if (details) details.open = true;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         });
     }
 
@@ -487,6 +509,150 @@ function parseNaturalLanguageSearch(query) {
     return result;
 }
 
+function bindAiQueryChips(root) {
+    const scope = root || document;
+    const queryChips = scope.querySelectorAll('.ai-query-chip');
+    queryChips.forEach((chip) => {
+        if (chip.dataset.aiBound === '1') return;
+        chip.dataset.aiBound = '1';
+        chip.addEventListener('click', () => {
+            const q = chip.getAttribute('data-ai-query') || chip.textContent || '';
+            if (searchInput) searchInput.value = q.trim();
+            applyFilters();
+        });
+    });
+}
+
+function formatCompactMoney(amount) {
+    const n = Number(amount || 0);
+    if (!Number.isFinite(n) || n <= 0) return '';
+    if (n >= 10000) return `${Math.round(n / 1000)}k`;
+    return `${Math.round(n)}`;
+}
+
+function computeMedian(values) {
+    const nums = (values || []).filter(v => Number.isFinite(v)).slice().sort((a, b) => a - b);
+    if (nums.length === 0) return null;
+    const mid = Math.floor(nums.length / 2);
+    return nums.length % 2 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+}
+
+function updateAISearchCoach(nlSearch, rawSearch) {
+    const hint = document.querySelector('.ai-search-hint');
+    if (!hint) return;
+
+    const count = filteredCars.length;
+    const prices = filteredCars.map(c => Number(c.price || 0)).filter(v => v > 0);
+    const miles = filteredCars.map(c => Number(c.mileage || 0)).filter(v => v > 0);
+    const years = filteredCars.map(c => Number(c.year || c.carYear || 0)).filter(v => v > 0);
+    const medianPrice = computeMedian(prices);
+    const medianMiles = computeMedian(miles);
+    const medianYear = computeMedian(years);
+
+    const suggestions = [];
+
+    const pushSuggestion = (q) => {
+        const s = String(q || '').trim();
+        if (!s) return;
+        const key = s.toLowerCase();
+        if (suggestions.some(x => x.toLowerCase() === key)) return;
+        suggestions.push(s);
+    };
+
+    if (count === 0) {
+        if (nlSearch?.maxPrice) pushSuggestion(`under ${formatCompactMoney(nlSearch.maxPrice + 5000)}`);
+        if (nlSearch?.minYear) pushSuggestion(`${Math.max(2015, nlSearch.minYear - 2)}+`);
+        if (nlSearch?.maxMileage) pushSuggestion(`under ${Math.round((nlSearch.maxMileage + 20000) / 1000)}k miles`);
+        if (!rawSearch?.trim()) pushSuggestion('great deal');
+    } else if (count < 12) {
+        if (nlSearch?.maxPrice) pushSuggestion(`under ${formatCompactMoney(nlSearch.maxPrice + 5000)}`);
+        if (!nlSearch?.maxPrice && medianPrice) pushSuggestion(`under ${formatCompactMoney(medianPrice * 1.15)}`);
+        if (!nlSearch?.maxMileage) pushSuggestion('low miles');
+        if (!nlSearch?.minYear) pushSuggestion('newish');
+    } else if (count > 120) {
+        if (!nlSearch?.maxPrice && medianPrice) pushSuggestion(`under ${formatCompactMoney(medianPrice)}`);
+        if (!nlSearch?.maxMileage && medianMiles) pushSuggestion(`under ${Math.round(medianMiles / 1000)}k miles`);
+        if (!nlSearch?.minYear && medianYear) pushSuggestion(`${Math.round(medianYear)}+`);
+        pushSuggestion('great deal');
+    } else {
+        if (!nlSearch?.maxPrice && medianPrice) pushSuggestion(`under ${formatCompactMoney(medianPrice)}`);
+        if (!nlSearch?.minYear && medianYear) pushSuggestion('newish');
+        if (!nlSearch?.maxMileage && medianMiles) pushSuggestion('low miles');
+    }
+
+    const label = count === 0
+        ? 'No matches — try:'
+        : count < 12
+            ? 'Few matches — try:'
+            : count > 120
+                ? 'Too many matches — try:'
+                : 'Try:';
+
+    const chipHtml = suggestions.slice(0, 4).map((q) => (
+        `<button type="button" class="ai-query-chip" data-ai-query="${escapeHtml(q)}">${escapeHtml(q)}</button>`
+    )).join('');
+
+    hint.innerHTML = `<span style="white-space:nowrap;">AI Coach:</span> <span style="white-space:nowrap;">${escapeHtml(label)}</span> ${chipHtml}`;
+    bindAiQueryChips(hint);
+}
+
+function formatPersonaLabel(persona) {
+    const p = String(persona || 'all').toLowerCase().trim();
+    if (p === 'all') return 'Top deals';
+    if (p === 'commuter') return 'Commuter';
+    if (p === 'family') return 'Family';
+    if (p === 'roadtrip') return 'Road trip';
+    if (p === 'performance') return 'Performance';
+    if (p === 'ev') return 'EV-first';
+    if (p === 'budget') return 'Budget';
+    return p;
+}
+
+function updateAiLens(nlSearch, rawSearch) {
+    if (!aiLens) return;
+
+    const chips = [];
+    const addChip = (label) => {
+        const s = String(label || '').trim();
+        if (!s) return;
+        chips.push(s);
+    };
+
+    addChip(formatPersonaLabel(currentPersona));
+
+    if (filterBody?.value) addChip(filterBody.value);
+    if (nlSearch?.maxPrice) addChip(`Under $${Number(nlSearch.maxPrice).toLocaleString()}`);
+    if (nlSearch?.minPrice) addChip(`Over $${Number(nlSearch.minPrice).toLocaleString()}`);
+    if (nlSearch?.maxMonthly) addChip(`Under $${Number(nlSearch.maxMonthly).toLocaleString()}/mo`);
+    if (nlSearch?.minYear) addChip(`${Number(nlSearch.minYear)}+`);
+    if (nlSearch?.maxMileage) addChip(`Under ${Math.round(Number(nlSearch.maxMileage) / 1000)}k mi`);
+
+    const kw = (nlSearch?.keywords || []).filter(Boolean);
+    if (kw.length && String(rawSearch || '').length <= 40) addChip(kw.slice(0, 2).join(' '));
+
+    const count = filteredCars.length;
+    const summary = count === 0
+        ? 'No matches'
+        : count === 1
+            ? '1 match'
+            : `${count.toLocaleString()} matches`;
+
+    const chipHtml = chips.slice(0, 4).map(c => `<span class="ai-lens-chip">${escapeHtml(c)}</span>`).join('');
+
+    aiLens.innerHTML = `
+      <div class="ai-lens-left">
+        <div class="ai-lens-title">AI Lens</div>
+        <div class="ai-lens-meta">${escapeHtml(summary)} • ranked by fit + value</div>
+      </div>
+      <div class="ai-lens-chips">${chipHtml}</div>
+      <div class="ai-lens-actions">
+        <button type="button" class="ai-lens-btn" data-ai-lens-action="explain">Why?</button>
+        <button type="button" class="ai-lens-btn" data-ai-lens-action="edit">Edit</button>
+        <button type="button" class="ai-lens-btn secondary" data-ai-lens-action="reset">Reset</button>
+      </div>
+    `;
+}
+
 function applyFilters() {
     const make = filterMake.value;
     const model = filterModel.value;
@@ -565,6 +731,9 @@ function applyFilters() {
                 return (b.dealScore || 0) - (a.dealScore || 0);
         }
     });
+
+    updateAISearchCoach(nlSearch, rawSearch);
+    updateAiLens(nlSearch, rawSearch);
 
     // Reset and render first batch
     displayedCount = 0;
@@ -1222,6 +1391,69 @@ function buildProsCons(car) {
     return { pros: pros.slice(0, 4), cons: cons.slice(0, 4) };
 }
 
+function getSimilarPicks(baseCar, limit = 3) {
+    const baseYear = Number(baseCar.year || baseCar.carYear || 0);
+    const basePrice = Number(baseCar.price || 0);
+    const baseMiles = Number(baseCar.mileage || 0);
+    const baseMake = String(baseCar.make || baseCar.makeName || '').toLowerCase().trim();
+    const baseModel = String(baseCar.model || baseCar.modelName || '').toLowerCase().trim();
+    const baseBody = String(baseCar.bodyType || '').toLowerCase().trim();
+    const baseDealScore = baseCar.dealScore != null ? Number(baseCar.dealScore) : null;
+
+    const scored = allCars
+        .filter(c => String(c.id) !== String(baseCar.id))
+        .map((c) => {
+            const year = Number(c.year || c.carYear || 0);
+            const price = Number(c.price || 0);
+            const miles = Number(c.mileage || 0);
+            const make = String(c.make || c.makeName || '').toLowerCase().trim();
+            const model = String(c.model || c.modelName || '').toLowerCase().trim();
+            const body = String(c.bodyType || '').toLowerCase().trim();
+            const dealScore = c.dealScore != null ? Number(c.dealScore) : null;
+
+            let score = 0;
+            if (baseMake && make && baseMake === make) score += 4;
+            if (baseModel && model && baseModel === model) score += 3;
+            if (baseBody && body && baseBody === body) score += 1.5;
+
+            if (baseYear && year) score += Math.max(0, 3 - Math.abs(baseYear - year));
+            if (basePrice && price) score += Math.max(0, 3 - (Math.abs(basePrice - price) / 5000));
+            if (baseMiles && miles) score += Math.max(0, 3 - (Math.abs(baseMiles - miles) / 20000));
+
+            if (baseDealScore != null && !Number.isNaN(baseDealScore) && dealScore != null && !Number.isNaN(dealScore)) {
+                const diff = dealScore - baseDealScore;
+                if (diff > 0) score += Math.min(1.5, diff / 20);
+            }
+
+            const reasons = [];
+            if (baseMake && make && baseMake === make && baseModel && model && baseModel === model) {
+                reasons.push('Same make & model');
+            } else if (baseMake && make && baseMake === make) {
+                reasons.push('Same make');
+            }
+            if (baseBody && body && baseBody === body) reasons.push('Same body type');
+
+            if (basePrice && price) {
+                const priceDeltaAbs = Math.abs(basePrice - price);
+                if (priceDeltaAbs <= 2000) reasons.push('Within $2k');
+                else if (priceDeltaAbs <= 5000) reasons.push('Within $5k');
+                if (price < basePrice - 1500) reasons.push('Cheaper');
+            }
+
+            if (baseYear && year && year > baseYear) reasons.push('Newer year');
+            if (baseMiles && miles && miles < baseMiles - 8000) reasons.push('Lower miles');
+
+            if (baseDealScore != null && !Number.isNaN(baseDealScore) && dealScore != null && !Number.isNaN(dealScore) && dealScore > baseDealScore + 10) {
+                reasons.push('Higher deal score');
+            }
+
+            return { car: c, score, reasons: reasons.slice(0, 3) };
+        })
+        .sort((a, b) => b.score - a.score);
+
+    return scored.slice(0, limit);
+}
+
 function renderDealBrief(carId) {
     if (!aiBriefBody || !aiBriefTitle) return;
 
@@ -1375,7 +1607,40 @@ function renderDealBrief(carId) {
       </div>
     `;
 
-    aiBriefBody.innerHTML = summaryBadges + metersHtml + metricsHtml + flagsHtml + actionsHtml + questionsHtml;
+    const similar = getSimilarPicks(car, 3);
+    const similarHtml = similar.length ? `
+      <div class="ai-brief-card">
+        <div class="ai-brief-label">AI Similar Picks</div>
+        <div class="ai-brief-note">Comparable listings from this inventory, with reasons.</div>
+        <div class="ai-similar-stack">
+          ${similar.map((s) => {
+            const c = s.car;
+            const title = escapeHtml(`${c.year || ''} ${c.make || ''} ${c.model || ''}`.trim());
+            const meta = escapeHtml(`${Math.round(Number(c.mileage || 0) / 1000)}k miles • $${Number(c.price || 0).toLocaleString()}`);
+            const img = escapeHtml(c.imageUrl || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800');
+            const reasonsHtml = s.reasons?.length
+                ? `<div class="match-reasons">${s.reasons.map(r => `<span class="match-reason-pill">${escapeHtml(r)}</span>`).join('')}</div>`
+                : '';
+            return `
+              <div class="saved-row">
+                <div class="saved-thumb"><img src="${img}" alt="${title}" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous"></div>
+                <div>
+                  <div class="saved-title">${title}</div>
+                  <div class="saved-meta">${meta}</div>
+                  ${reasonsHtml}
+                </div>
+                <div class="saved-actions">
+                  <button type="button" class="saved-action" data-ai-action="brief" data-ai-car-id="${escapeHtml(String(c.id))}">Brief</button>
+                  <button type="button" class="saved-action" data-ai-action="view" data-ai-car-id="${escapeHtml(String(c.id))}">View</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    aiBriefBody.innerHTML = summaryBadges + metersHtml + metricsHtml + flagsHtml + actionsHtml + questionsHtml + similarHtml;
 }
 
 function openDealBrief(carId) {
