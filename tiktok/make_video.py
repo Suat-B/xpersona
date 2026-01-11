@@ -3,8 +3,8 @@ import numpy as np
 import os
 
 def create_video():
-    image_path = r'c:\Users\suatb\xpersona\tiktok\promo_3.png'
-    output_path = r'c:\Users\suatb\xpersona\tiktok\promo_3.mp4'
+    image_path = r'c:\Users\suatb\Xpersona\tiktok\promo_3.png'
+    output_path = r'c:\Users\suatb\Xpersona\tiktok\promo_3.mp4'
     
     if not os.path.exists(image_path):
         print(f"Error: Image not found at {image_path}")

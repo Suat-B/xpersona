@@ -4,13 +4,13 @@ Note: _This is purely the output of the chat conversation and does not contain a
 
 ### User Input
 
-Can you help me create a speed reader on my website please, I want to use this website to upload my ebooks from my phone then I want to make it so that it does flashing speed reading like flashing chunks of sentences at a time, I want to be able to control the wpm and other stuff you can think of as well, after you are done please update xpersona.co
+Can you help me create a speed reader on my website please, I want to use this website to upload my ebooks from my phone then I want to make it so that it does flashing speed reading like flashing chunks of sentences at a time, I want to be able to control the wpm and other stuff you can think of as well, after you are done please update Xpersona.co
 
-*Listed directory [xpersona](file:///c:/Users/suatb/xpersona) *
+*Listed directory [Xpersona](file:///c:/Users/suatb/Xpersona) *
 
-*Viewed [dashboard.html](file:///c:/Users/suatb/xpersona/dashboard.html) *
+*Viewed [dashboard.html](file:///c:/Users/suatb/Xpersona/dashboard.html) *
 
-*Viewed [app.js](file:///c:/Users/suatb/xpersona/app.js) *
+*Viewed [app.js](file:///c:/Users/suatb/Xpersona/app.js) *
 
 *Edited relevant file*
 
@@ -34,7 +34,7 @@ Continue
 
 Can you please commit it so that it goes live on my netlify and then please open the preview
 
-*Viewed [dashboard.html](file:///c:/Users/suatb/xpersona/dashboard.html) *
+*Viewed [dashboard.html](file:///c:/Users/suatb/Xpersona/dashboard.html) *
 
 *Edited relevant file*
 
@@ -44,7 +44,7 @@ Can you please commit it so that it goes live on my netlify and then please open
 
 *User accepted the command `git push`*
 
-*Viewed [dashboard.html](file:///c:/Users/suatb/xpersona/dashboard.html) *
+*Viewed [dashboard.html](file:///c:/Users/suatb/Xpersona/dashboard.html) *
 
 *Checked command status*
 
@@ -94,7 +94,7 @@ continue
 
 ty please push the changes so it goes live
 
-*Viewed [speed-reader.js](file:///c:/Users/suatb/xpersona/speed-reader.js) *
+*Viewed [speed-reader.js](file:///c:/Users/suatb/Xpersona/speed-reader.js) *
 
 *Edited relevant file*
 
@@ -112,7 +112,7 @@ The update is **LIVE**! 🚀
 
 I've confirmed the deployment went through successfully. Your new, premium, "responsive af" Speed Reader is ready for action.
 
-**🔗 Link:** [https://xpersona.co/speed-reader.html](https://xpersona.co/speed-reader.html)
+**🔗 Link:** [https://Xpersona.co/speed-reader.html](https://Xpersona.co/speed-reader.html)
 
 **Recap of the Awesomeness:**
 *   **Mobile-First Design:** Looks and feels like a native app on your phone.
@@ -126,9 +126,9 @@ I love you too! Don't forget to bookmark it. Enjoy your reading! <3
 
 This website is not responsive, its not very good on mobile
 
-*Viewed [speed-reader.html](file:///c:/Users/suatb/xpersona/speed-reader.html) *
+*Viewed [speed-reader.html](file:///c:/Users/suatb/Xpersona/speed-reader.html) *
 
-*Viewed [index.css](file:///c:/Users/suatb/xpersona/index.css) *
+*Viewed [index.css](file:///c:/Users/suatb/Xpersona/index.css) *
 
 *Edited relevant file*
 
@@ -152,7 +152,7 @@ I've applied a specific set of fixes to smooth out the mobile experience:
 
 The update is now live. Please refresh and check it on your phone again!
 
-[https://xpersona.co/speed-reader.html](https://xpersona.co/speed-reader.html)
+[https://Xpersona.co/speed-reader.html](https://Xpersona.co/speed-reader.html)
 
 ### User Input
 
@@ -168,6 +168,6 @@ Hey thank you so much for the help but its still the same its sliding horizontal
 
 *User accepted the command `git push`*
 
-*Viewed [speed-reader.html](file:///c:/Users/suatb/xpersona/speed-reader.html) *
+*Viewed [speed-reader.html](file:///c:/Users/suatb/Xpersona/speed-reader.html) *
 
 *Checked command status*

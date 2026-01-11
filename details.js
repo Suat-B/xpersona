@@ -1,5 +1,5 @@
 /**
- * xpersona - Modern Details Page JavaScript
+ * Xpersona - Modern Details Page JavaScript
  */
 
 let car = null;
@@ -161,7 +161,7 @@ function renderCarDetails() {
     const imageUrl = car.originalPictureData?.url || car.imageUrl || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800';
 
     // Page title
-    document.title = `${year} ${make} ${model} | xpersona`;
+    document.title = `${year} ${make} ${model} | Xpersona`;
     
     // Smooth page entrance with scale
     document.body.style.opacity = '0';
@@ -454,4 +454,3 @@ function updateGalleryImage() {
         }
     });
 }
-
