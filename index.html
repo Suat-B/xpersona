@@ -175,6 +175,12 @@
       font-size: 1rem;
     }
 
+    .pill-cta-btn {
+      padding: 12px 16px;
+      width: 190px;
+      max-width: 100%;
+    }
+
     .btn:active {
       transform: scale(0.98);
     }
@@ -617,152 +623,7 @@
 
 <body>
 
-  <div class="banner-container">
-    <img src="landing_banner.png" alt="Premium Cars" class="banner-image">
-    <div class="banner-overlay">
-      <div class="hero">
-        <div class="nav">
-          <div class="nav-left">xpersona</div>
-          <div class="nav-right">
-            <a class="nav-link" href="#dealers">For Dealers</a>
-            <a class="nav-link" href="shop.html">Inventory</a>
-            <a class="nav-link" href="#contact">Contact</a>
-          </div>
-        </div>
-
-        <div class="hero-grid">
-          <div>
-            <div class="kicker">
-              <span class="kicker-dot"></span>
-              Dealer partnerships
-            </div>
-            <div style="margin-top: 10px;">
-              <h1>More leads. Better shoppers. Cleaner deals.</h1>
-              <p class="subtitle" style="margin-top: 10px;">xpersona helps dealerships convert high-intent shoppers with AI Deal Briefs, natural-language search, and a premium buying experience that drives partner signups.</p>
-            </div>
-
-            <div class="hero-metrics" style="margin-top: 14px;">
-              <span class="metric-pill"><strong>AI Brief</strong> builds trust fast</span>
-              <span class="metric-pill"><strong>Compare</strong> increases intent</span>
-              <span class="metric-pill"><strong>Persona</strong> ranking boosts relevance</span>
-            </div>
-
-            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 14px;">
-              <a href="#dealers" class="btn btn-primary">Become a Partner</a>
-              <a href="shop.html" class="btn btn-ghost">See the Inventory UX</a>
-            </div>
-          </div>
-
-          <div class="hero-card" id="dealers">
-            <div class="hero-card-title">Request a dealer partnership</div>
-            <div class="hero-card-sub">Get a quick onboarding call. Tell us your inventory size and what region you sell in.</div>
-            <form id="partner-form">
-              <div class="form-grid">
-                <div class="field">
-                  <div class="label">Dealership name</div>
-                  <input class="input" name="dealership" autocomplete="organization" placeholder="Keating Toyota" required>
-                </div>
-                <div class="field">
-                  <div class="label">Your name</div>
-                  <input class="input" name="name" autocomplete="name" placeholder="Suat" required>
-                </div>
-                <div class="field">
-                  <div class="label">Email</div>
-                  <input class="input" name="email" type="email" autocomplete="email" placeholder="you@dealership.com" required>
-                </div>
-                <div class="field">
-                  <div class="label">Phone</div>
-                  <input class="input" name="phone" autocomplete="tel" placeholder="(555) 555-5555">
-                </div>
-                <div class="field">
-                  <div class="label">Inventory size</div>
-                  <select class="select" name="inventory">
-                    <option value="Under 50">Under 50</option>
-                    <option value="50-200">50–200</option>
-                    <option value="200-600">200–600</option>
-                    <option value="600+">600+</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <div class="label">Notes</div>
-                  <textarea class="textarea" name="notes" placeholder="What makes your store special? Any brands or regions you focus on?"></textarea>
-                </div>
-              </div>
-              <div class="form-actions" id="contact">
-                <button class="btn-form" type="submit">Send partnership request</button>
-                <a class="btn-form secondary" href="shop.html" style="text-align:center;">Preview the shopper experience</a>
-                <div class="fineprint">No spam. We use this only to contact you about partnership setup.</div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <main class="page">
-    <section class="section">
-      <h2 class="section-title">Why dealers partner with xpersona</h2>
-      <p class="section-subtitle">We’re building a marketplace that rewards high-quality inventory and transparent pricing. You get better shoppers and a brand-forward placement inside an AI-first experience.</p>
-
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-title">
-            Higher-intent leads
-            <span class="chip blue">Dealer-first</span>
-          </div>
-          <p>AI Deal Briefs reduce “window shopping” and push real buyers to contact you with better questions.</p>
-        </div>
-        <div class="card">
-          <div class="card-title">
-            Cleaner conversations
-            <span class="chip">Less friction</span>
-          </div>
-          <p>Our flow highlights tradeoffs, market context, and affordability before the shopper reaches your team.</p>
-        </div>
-        <div class="card">
-          <div class="card-title">
-            Partner positioning
-            <span class="chip">Brand lift</span>
-          </div>
-          <p>We prioritize stores that respond fast, price transparently, and keep listings complete.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="split">
-        <div>
-          <h2 class="section-title">Dealer tools built into the shopper UX</h2>
-          <p class="section-subtitle">We convert attention into intent by giving buyers clarity: deal quality, affordability, risk flags, and the right questions.</p>
-
-          <div class="grid-3" style="margin-top: 16px;">
-            <div class="card">
-              <div class="card-title">AI Deal Brief <span class="chip blue">Trust</span></div>
-              <p>Value score, market context, pros/cons, and risk flags per listing—so buyers arrive educated.</p>
-            </div>
-            <div class="card">
-              <div class="card-title">Compare <span class="chip">Conversion</span></div>
-              <p>Side-by-side comparisons reduce drop-off and make the next step obvious: contact or visit.</p>
-            </div>
-            <div class="card">
-              <div class="card-title">AI Search <span class="chip">Intent</span></div>
-              <p>Natural-language queries (“5k down SUV”) help the right buyer find the right unit fast.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="quote">
-          <div class="quote-top">
-            <span class="quote-tag">Partner outcomes</span>
-            <span class="chip">Early access</span>
-          </div>
-          <div class="quote-body">“When shoppers understand why a listing is priced the way it is, the conversation starts at a higher level. That’s what we’re building with xpersona.”</div>
-          <div class="quote-byline">— xpersona partnerships</div>
-        </div>
-      </div>
-    </section>
-
     <section class="section">
       <h2 class="section-title">How dealer partnership works</h2>
       <p class="section-subtitle">Fast onboarding. Clear expectations. We want long-term partners, not one-off listings.</p>
@@ -799,13 +660,79 @@
     </section>
 
     <section class="section" style="padding-top: 6px;">
+      <h2 class="section-title">AI-first car buying features</h2>
+      <p class="section-subtitle">A concept platform where every listing comes with context: what it costs, what it risks, and what to do next.</p>
+
+      <div class="grid-3" style="margin-top: 16px;">
+        <div class="card">
+          <div class="card-title">AI Deal Brief <span class="chip blue">Trust</span></div>
+          <p>Instant market context, value score, and the best next questions to ask—so shoppers show up ready.</p>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px;">
+            <a class="chip blue" href="shop.html?q=top%20deals%20suv&persona=family&body=SUV">Try: family SUV deals</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Budget-to-Keys <span class="chip">Affordability</span></div>
+          <p>Turn a monthly target into real inventory matches, with transparent assumptions and tradeoffs.</p>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px;">
+            <a class="chip blue" href="shop.html?q=under%20450%2Fmo&persona=budget">Try: under $450/mo</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Persona Ranking <span class="chip blue">AI</span></div>
+          <p>Switch modes (Commuter, Family, EV-first) to re-rank by fit, then break ties by deal quality.</p>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px;">
+            <a class="chip" href="shop.html?persona=commuter">Try: commuter mode</a>
+            <a class="chip" href="shop.html?persona=ev">Try: EV-first mode</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Risk Radar <span class="chip">Confidence</span></div>
+          <p>Flags pricing weirdness, stale listings, and missing data so buyers don’t waste time chasing noise.</p>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px;">
+            <a class="chip" href="shop.html?q=great%20deal">Try: great deals</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Tradeoff Explorer <span class="chip blue">Explain</span></div>
+          <p>Shows why a car matches a query (and what you give up), so decisions feel obvious.</p>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px;">
+            <a class="chip" href="shop.html?q=5k%20down%20suv">Try: 5k down SUV</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Negotiation Coach <span class="chip">Next step</span></div>
+          <p>Gives a clean offer plan: what to ask, what to verify, and what “good” looks like for that listing.</p>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px;">
+            <a class="chip" href="shop.html?q=under%2025000%20honda%202020">Try: under 25k Honda 2020</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 6px;">
       <div class="demo" role="region" aria-label="Partner CTA">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
           <div style="display:grid; gap:6px;">
             <div style="font-weight:900; letter-spacing:-0.6px; font-size:1.2rem; color:#fff;">Let’s partner</div>
             <div style="color:rgba(255,255,255,0.82); font-size:0.95rem;">If you’re a dealership, we’ll get you set up quickly.</div>
           </div>
-          <a href="#dealers" class="btn btn-shop" style="padding:12px 16px; min-width:auto;">Request partnership</a>
+          <a href="mailto:partnerships@xpersona.com?subject=Dealer%20partnership%20request" class="btn btn-shop pill-cta-btn">Request partnership</a>
+        </div>
+      </div>
+
+      <div class="demo" role="region" aria-label="Inventory CTA">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div style="display:grid; gap:6px;">
+            <div style="font-weight:900; letter-spacing:-0.6px; font-size:1.2rem; color:#fff;">Browse the inventory</div>
+            <div style="color:rgba(255,255,255,0.82); font-size:0.95rem;">See the shopper experience and explore listings.</div>
+          </div>
+          <a href="shop.html" class="btn btn-shop pill-cta-btn">View inventory</a>
         </div>
       </div>
     </section>
@@ -814,36 +741,6 @@
   <div class="footer">
     © 2026 xpersona • Partnerships: <a href="mailto:partnerships@xpersona.com">partnerships@xpersona.com</a>
   </div>
-
-  <script>
-    (function () {
-      const form = document.getElementById('partner-form');
-      if (!form) return;
-
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const data = new FormData(form);
-        const dealership = (data.get('dealership') || '').toString().trim();
-        const name = (data.get('name') || '').toString().trim();
-        const email = (data.get('email') || '').toString().trim();
-        const phone = (data.get('phone') || '').toString().trim();
-        const inventory = (data.get('inventory') || '').toString().trim();
-        const notes = (data.get('notes') || '').toString().trim();
-
-        const subject = encodeURIComponent(`Dealer partnership request: ${dealership || 'xpersona'}`);
-        const body = encodeURIComponent(
-          `Dealership: ${dealership}\n` +
-          `Name: ${name}\n` +
-          `Email: ${email}\n` +
-          `Phone: ${phone}\n` +
-          `Inventory size: ${inventory}\n\n` +
-          `Notes:\n${notes}\n`
-        );
-
-        window.location.href = `mailto:partnerships@xpersona.com?subject=${subject}&body=${body}`;
-      });
-    })();
-  </script>
 
 </body>
 

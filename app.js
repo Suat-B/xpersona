@@ -60,11 +60,44 @@ let currentBriefCarId = null;
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
+    hydrateFromUrlParams();
     setupEventListeners();
     setupHeaderScroll();
     setupInfiniteScroll();
     await loadCars();
     syncPersonaUI();
+}
+
+function hydrateFromUrlParams() {
+    try {
+        const params = new URLSearchParams(window.location.search || '');
+        const q = (params.get('q') || params.get('query') || params.get('search') || '').trim();
+        const persona = (params.get('persona') || '').trim();
+        const body = (params.get('body') || '').trim();
+        const sort = (params.get('sort') || '').trim();
+
+        if (q && searchInput) searchInput.value = q;
+        if (sort && sortSelect) sortSelect.value = sort;
+
+        if (persona) {
+            currentPersona = persona;
+            localStorage.setItem('persona', currentPersona);
+        }
+
+        if (body && filterBody) {
+            filterBody.value = body;
+            const pills = document.querySelectorAll('.cat-pill');
+            pills.forEach(p => p.classList.remove('active'));
+            for (const pill of pills) {
+                const label = pill.querySelector('.cat-pill-label')?.innerText || '';
+                if (body === '' && label === 'All') pill.classList.add('active');
+                if (body !== '' && label.toLowerCase().includes(body.toLowerCase())) pill.classList.add('active');
+            }
+            if (body === '' && pills.length > 0) pills[0].classList.add('active');
+        }
+    } catch {
+        return;
+    }
 }
 
 function setupEventListeners() {
@@ -339,12 +372,32 @@ function parseNaturalLanguageSearch(query) {
         maxDownPayment: null,
         maxPrice: null,
         minPrice: null,
+        maxMonthly: null,
+        minMonthly: null,
+        minYear: null,
+        maxMileage: null,
         keywords: []
     };
 
     if (!query) return result;
 
-    const lowerQuery = query.toLowerCase().trim();
+    let lowerQuery = query.toLowerCase().trim();
+
+    // V2: Smart Keywords
+    if (lowerQuery.includes('newish') || lowerQuery.includes('modern')) {
+        result.minYear = new Date().getFullYear() - 4; // Last 4 years
+        lowerQuery = lowerQuery.replace('newish', '').replace('modern', '');
+    }
+
+    if (lowerQuery.includes('low miles') || lowerQuery.includes('low mileage')) {
+        result.maxMileage = 35000;
+        lowerQuery = lowerQuery.replace('low miles', '').replace('low mileage', '');
+    }
+
+    if (lowerQuery.includes('cheap') || lowerQuery.includes('budget')) {
+        result.maxPrice = 15000;
+        lowerQuery = lowerQuery.replace('cheap', '').replace('budget', '');
+    }
 
     // Match down payment patterns: "5k down", "5000 down", "$5,000 down"
     const downPaymentMatch = lowerQuery.match(/(\$?\d+[,.]?\d*k?)\s*down/i);
@@ -358,6 +411,33 @@ function parseNaturalLanguageSearch(query) {
         result.maxDownPayment = amount;
     }
 
+    // Match monthly payment patterns FIRST (to avoid confusion with total price)
+    // "under 400/mo", "below $500 monthly"
+    const underMonthlyMatch = lowerQuery.match(/(under|below|less\s*than|max)\s*\$?(\d+[,.]?\d*k?)\s*(\/mo|mo|per\s*month|monthly)/i);
+    if (underMonthlyMatch) {
+        let amount = underMonthlyMatch[2].replace(/[$,]/g, '');
+        if (amount.endsWith('k')) {
+            amount = parseFloat(amount) * 1000;
+        } else {
+            amount = parseFloat(amount);
+        }
+        result.maxMonthly = amount;
+        // Clean up the string so we don't match this as a price later
+        lowerQuery = lowerQuery.replace(underMonthlyMatch[0], '');
+    }
+
+    const overMonthlyMatch = lowerQuery.match(/(over|above|more\s*than|min)\s*\$?(\d+[,.]?\d*k?)\s*(\/mo|mo|per\s*month|monthly)/i);
+    if (overMonthlyMatch) {
+        let amount = overMonthlyMatch[2].replace(/[$,]/g, '');
+        if (amount.endsWith('k')) {
+            amount = parseFloat(amount) * 1000;
+        } else {
+            amount = parseFloat(amount);
+        }
+        result.minMonthly = amount;
+        lowerQuery = lowerQuery.replace(overMonthlyMatch[0], '');
+    }
+
     // Match price patterns: "under 20000", "below $30k", "less than 25000"
     const underPriceMatch = lowerQuery.match(/(under|below|less\s*than|max)\s*\$?(\d+[,.]?\d*k?)/i);
     if (underPriceMatch) {
@@ -367,7 +447,7 @@ function parseNaturalLanguageSearch(query) {
         } else {
             amount = parseFloat(amount);
         }
-        result.maxPrice = amount;
+        result.maxPrice = amount; // Overwrite 'cheap' if specific price given
     }
 
     // Match "over/above X" patterns
@@ -382,7 +462,7 @@ function parseNaturalLanguageSearch(query) {
         result.minPrice = amount;
     }
 
-    // Extract remaining keywords (remove matched price/down patterns)
+    // Extract remaining keywords (remove matched patterns)
     let cleanQuery = lowerQuery
         .replace(/(\$?\d+[,.]?\d*k?)\s*down/gi, '')
         .replace(/(under|below|less\s*than|max|over|above|more\s*than|min)\s*\$?(\d+[,.]?\d*k?)/gi, '')
@@ -420,15 +500,26 @@ function applyFilters() {
             if (car.price < min || car.price > max) return false;
         }
 
-        // Natural language down payment filter (10% down payment = price * 0.1)
+        // Natural language down payment filter
         if (nlSearch.maxDownPayment) {
-            const downPayment = car.price * 0.1;
+            const downPayment = car.price * DOWN_PAYMENT_PERCENT;
             if (downPayment > nlSearch.maxDownPayment) return false;
         }
 
         // Natural language price filters
         if (nlSearch.maxPrice && car.price > nlSearch.maxPrice) return false;
         if (nlSearch.minPrice && car.price < nlSearch.minPrice) return false;
+
+        // V2: New filters
+        if (nlSearch.minYear && car.year < nlSearch.minYear) return false;
+        if (nlSearch.maxMileage && car.mileage > nlSearch.maxMileage) return false;
+
+        if (nlSearch.maxMonthly || nlSearch.minMonthly) {
+            const downPaymentAmount = Math.round(car.price * DOWN_PAYMENT_PERCENT);
+            const monthlyPayment = Math.round(((car.price - downPaymentAmount) * 1.07) / 60);
+            if (nlSearch.maxMonthly != null && monthlyPayment > nlSearch.maxMonthly) return false;
+            if (nlSearch.minMonthly != null && monthlyPayment < nlSearch.minMonthly) return false;
+        }
 
         // Keyword search
         if (searchKeywords) {
@@ -533,6 +624,12 @@ function createCarCardHTML(car) {
     // Monthly Est (Remaining balance over 60mo @ 7%)
     const monthlyPayment = Math.round(((car.price - downPaymentAmount) * 1.07) / 60);
 
+    const reasonsHTML = (match && match.reasons && match.reasons.length > 0)
+        ? `<div class="match-reasons">
+             ${match.reasons.map(r => `<span class="match-reason-pill">${r}</span>`).join('')}
+           </div>`
+        : '';
+
     return `
     <div class="car-image-wrapper">
       <img src="${car.imageUrl}" alt="${car.year} ${car.make} ${car.model}" class="car-image" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous" onload="handleCardImageLoad(this)" onerror="handleCardImageError(this)">
@@ -555,6 +652,8 @@ function createCarCardHTML(car) {
       </div>
       <p class="car-subtitle">${car.trim || ''} • ${Math.round(car.mileage / 1000)}k miles</p>
       
+      ${reasonsHTML}
+
       <div class="car-price-block">
         <div class="down-payment-row">
             <span class="down-price">${downPaymentText}</span>
@@ -644,7 +743,7 @@ function normalizeText(value) {
 
 function getPersonaMatch(car) {
     const persona = currentPersona || 'all';
-    if (persona === 'all') return { score: 0 };
+    if (persona === 'all') return { score: 0, reasons: [] };
 
     const body = normalizeText(car.bodyType);
     const fuel = normalizeText(car.fuelType);
@@ -658,60 +757,68 @@ function getPersonaMatch(car) {
     const days = car.daysOnMarket != null ? Number(car.daysOnMarket) : null;
 
     let score = 55;
+    const reasons = [];
+
     score += clamp((dealScore || 0) * 0.35, 0, 22);
+    if (dealScore >= 80) reasons.push('Great Deal');
 
     if (diff != null && !Number.isNaN(diff)) {
         score += clamp(diff / 600, -14, 16);
+        if (diff > 1200) reasons.push('Below Market');
     }
 
     if (days != null && !Number.isNaN(days) && days > 0) {
         score += clamp(10 - (days / 18), -6, 10);
+        if (days < 14) reasons.push('Fresh Listing');
     }
 
     const mileagePenalty = mileage > 0 ? clamp((mileage - 35000) / 18000, 0, 12) : 0;
     score -= mileagePenalty;
+    if (mileage > 0 && mileage < 25000) reasons.push('Low Miles');
 
     const downPayment = price > 0 ? price * DOWN_PAYMENT_PERCENT : 0;
 
     switch (persona) {
         case 'commuter':
-            if (fuel.includes('electric')) score += 18;
-            if (fuel.includes('hybrid')) score += 10;
+            if (fuel.includes('electric')) { score += 18; reasons.push('⚡️ EV'); }
+            if (fuel.includes('hybrid')) { score += 10; reasons.push('🌱 Hybrid'); }
             if (body.includes('sedan')) score += 8;
             if (mileage > 0 && mileage <= 30000) score += 10;
-            if (downPayment > 0 && downPayment <= 4500) score += 8;
+            if (downPayment > 0 && downPayment <= 4500) { score += 8; reasons.push('💰 Low Down Pmt'); }
             break;
         case 'family':
-            if (body.includes('suv')) score += 16;
-            if (body.includes('van')) score += 14;
+            if (body.includes('suv')) { score += 16; reasons.push('🚙 SUV'); }
+            if (body.includes('van')) { score += 14; reasons.push('🚐 Van'); }
             if (body.includes('truck')) score += 6;
-            if (drivetrain.includes('awd') || drivetrain.includes('4wd')) score += 8;
+            if (drivetrain.includes('awd') || drivetrain.includes('4wd')) { score += 8; reasons.push('AWD'); }
             if (mileage > 0 && mileage <= 50000) score += 6;
             break;
         case 'roadtrip':
             if (body.includes('suv')) score += 10;
-            if (drivetrain.includes('awd') || drivetrain.includes('4wd')) score += 10;
-            if (fuel.includes('diesel')) score += 6;
+            if (drivetrain.includes('awd') || drivetrain.includes('4wd')) { score += 10; reasons.push('⛰️ AWD'); }
+            if (fuel.includes('diesel')) { score += 6; reasons.push('Diesel Range'); }
             if (transmission.includes('automatic')) score += 3;
-            if (mileage > 0 && mileage <= 60000) score += 6;
+            if (mileage > 0 && mileage <= 60000) { score += 6; reasons.push('Reliable Miles'); }
             break;
         case 'performance':
-            if (body.includes('coupe')) score += 16;
+            if (body.includes('coupe')) { score += 16; reasons.push('🏎️ Coupe'); }
             if (body.includes('luxury')) score += 10;
             if (price >= 35000) score += 8;
-            if (drivetrain.includes('awd') || drivetrain.includes('rwd')) score += 6;
+            if (drivetrain.includes('awd') || drivetrain.includes('rwd')) { score += 6; reasons.push('RWD/AWD'); }
             break;
         case 'ev':
-            if (fuel.includes('electric')) score += 28;
+            if (fuel.includes('electric')) { score += 28; reasons.push('⚡️ Electric'); }
             if (fuel.includes('hybrid')) score -= 8;
             if (!fuel.includes('electric') && !fuel.includes('ev')) score -= 18;
             break;
         case 'budget':
             if (downPayment > 0) {
                 score += clamp((7000 - downPayment) / 500, -10, 16);
+                if (downPayment < 3000) reasons.push('📉 Low Down Pmt');
             }
             if (price > 0) {
                 score += clamp((28000 - price) / 1200, -10, 18);
+                if (price < 20000) reasons.push('💵 Budget Friendly');
             }
             if (dealScore >= 70) score += 6;
             break;
@@ -720,7 +827,8 @@ function getPersonaMatch(car) {
     }
 
     const finalScore = clamp(Math.round(score), 0, 99);
-    return { score: finalScore };
+    // Prioritize persona-specific reasons, limit to top 2
+    return { score: finalScore, reasons: reasons.slice(0, 2) };
 }
 
 function syncPersonaUI() {
@@ -1283,6 +1391,3 @@ function closeDealBrief() {
     currentBriefCarId = null;
     if (lastFocusedElement && lastFocusedElement.focus) lastFocusedElement.focus();
 }
-
-
-
