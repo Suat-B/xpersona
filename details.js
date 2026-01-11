@@ -221,6 +221,134 @@ function renderCarDetails() {
             }
         }
     }
+
+    const dealRating = formatDealRating(car.dealRating);
+
+    const dealText = document.getElementById('deal-rating-text');
+    if (dealText) {
+        dealText.textContent = dealRating;
+        if (dealRating.includes('Great') || dealRating.includes('Good')) {
+            dealText.style.color = 'var(--success)';
+        } else if (dealRating.includes('Fair')) {
+            dealText.style.color = 'var(--warning)';
+        } else {
+            dealText.style.color = 'var(--text-secondary)';
+        }
+    }
+
+    const galleryBadge = document.getElementById('gallery-deal-badge');
+    if (galleryBadge) {
+        galleryBadge.textContent = dealRating;
+        if (dealRating === 'Great Deal') galleryBadge.style.color = 'var(--success)';
+        else if (dealRating === 'Good Deal') galleryBadge.style.color = 'var(--success)';
+        else if (dealRating === 'Fair Deal') galleryBadge.style.color = 'var(--warning)';
+        else galleryBadge.style.color = 'var(--text-secondary)';
+    }
+
+    const diff = car.priceDifferential || 0;
+    const marketEl = document.getElementById('market-note');
+    if (marketEl) {
+        if (diff > 0) {
+            marketEl.textContent = `$${Math.round(diff).toLocaleString()} below market average`;
+            marketEl.style.color = 'var(--success)';
+        } else if (diff < 0) {
+            marketEl.textContent = `$${Math.abs(Math.round(diff)).toLocaleString()} above market average`;
+            marketEl.style.color = 'var(--text-muted)';
+        } else {
+            marketEl.textContent = 'Priced at market average';
+        }
+    }
+
+    const mainImage = document.getElementById('main-image');
+    if (mainImage) {
+        mainImage.style.opacity = '0';
+        mainImage.style.transform = 'scale(1.05)';
+        mainImage.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        mainImage.src = imageUrl;
+        mainImage.alt = `${year} ${make} ${model}`;
+        mainImage.onload = () => {
+            requestAnimationFrame(() => {
+                mainImage.style.opacity = '1';
+                mainImage.style.transform = 'scale(1)';
+            });
+        };
+        mainImage.onerror = () => {
+            mainImage.src = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800';
+            mainImage.style.opacity = '1';
+            mainImage.style.transform = 'scale(1)';
+        };
+    }
+
+    safeSetText('stat-mileage', mileage.toLocaleString());
+    safeSetText('stat-transmission', (car.localizedTransmission || car.transmission || 'Auto').split(' ')[0]);
+    safeSetText('stat-drivetrain', car.localizedDriveTrain || car.drivetrain || 'FWD');
+    safeSetText('stat-engine', (car.localizedEngineDisplayName || 'V6').split(' ')[0]);
+
+    const dealerName = car.serviceProviderName || car.dealerName || car.dealer?.name || 'Authorized Dealer';
+    safeSetText('dealer-name', dealerName);
+
+    const features = [
+        { icon: '🛣️', label: 'Mileage', value: `${mileage.toLocaleString()} mi` },
+        { icon: '⚙️', label: 'Drivetrain', value: car.localizedDriveTrain || car.drivetrain || 'FWD' },
+        { icon: '🎨', label: 'Exterior', value: car.localizedExteriorColor || car.exteriorColor || 'N/A' },
+        { icon: '💺', label: 'Interior', value: car.localizedInteriorColor || car.interiorColor || 'N/A' },
+        { icon: '🔧', label: 'Engine', value: car.localizedEngineDisplayName || 'N/A' },
+        { icon: '⛽', label: 'Fuel', value: car.localizedFuelType || car.fuelType || 'Gasoline' },
+        { icon: '🔄', label: 'Transmission', value: car.localizedTransmission || car.transmission || 'Auto' },
+        { icon: '🚗', label: 'Body', value: car.bodyTypeName || car.bodyType || 'Sedan' }
+    ];
+
+    const featuresGrid = document.getElementById('features-grid');
+    if (featuresGrid) {
+        featuresGrid.innerHTML = features.map((f, index) => `
+            <div class="feature-item" style="opacity: 0; transform: translateY(10px) scale(0.95); transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 60}ms, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 60}ms;">
+                <div class="feature-icon">${f.icon}</div>
+                <div class="feature-content">
+                    <span class="feature-label">${f.label}</span>
+                    <span class="feature-value">${f.value}</span>
+                </div>
+            </div>
+        `).join('');
+
+        setTimeout(() => {
+            const items = featuresGrid.querySelectorAll('.feature-item');
+            items.forEach(item => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0) scale(1)';
+            });
+        }, 150);
+    }
+
+    const specs = [
+        { label: 'Make', value: make },
+        { label: 'Model', value: model },
+        { label: 'Year', value: year },
+        { label: 'Trim', value: trim || 'Base' },
+        { label: 'Body Style', value: car.bodyTypeName || car.bodyType || 'Sedan' },
+        { label: 'Ext. Color', value: car.localizedExteriorColor || 'Unknown' },
+        { label: 'Int. Color', value: car.localizedInteriorColor || 'Unknown' },
+        { label: 'Stock #', value: car.stockNumber || 'N/A' },
+        { label: 'VIN', value: car.vin || 'Call for VIN' },
+        { label: 'Days Listed', value: car.daysOnMarket || 'Just Listed' }
+    ];
+
+    const specsGrid = document.getElementById('specs-grid');
+    if (specsGrid) {
+        specsGrid.innerHTML = specs.map((s, index) => `
+            <div class="overview-item" style="opacity: 0; transform: translateY(10px) scale(0.95); transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 50}ms, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 50}ms;">
+                <span class="overview-label">${s.label}</span>
+                <span class="overview-value">${s.value}</span>
+            </div>
+        `).join('');
+
+        setTimeout(() => {
+            const items = specsGrid.querySelectorAll('.overview-item');
+            items.forEach(item => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0) scale(1)';
+            });
+        }, 250);
+    }
 }
 
 // Smooth price animation
@@ -245,149 +373,6 @@ function animatePrice(element, start, end, duration) {
     }
     
     requestAnimationFrame(update);
-
-    // Deal Rating Logic
-    const dealRating = formatDealRating(car.dealRating);
-
-    // 1. Sidebar Rating Text
-    const dealText = document.getElementById('deal-rating-text');
-    if (dealText) {
-        dealText.textContent = dealRating;
-        // Optional: colorize text based on rating
-        if (dealRating.includes('Great') || dealRating.includes('Good')) {
-            dealText.style.color = 'var(--success)';
-        } else if (dealRating.includes('Fair')) {
-            dealText.style.color = 'var(--warning)';
-        } else {
-            dealText.style.color = 'var(--text-secondary)';
-        }
-    }
-
-    // 2. Gallery Overlay Badge
-    const galleryBadge = document.getElementById('gallery-deal-badge');
-    if (galleryBadge) {
-        galleryBadge.textContent = dealRating;
-        // Simple color logic for badge
-        if (dealRating === 'Great Deal') galleryBadge.style.color = 'var(--success)';
-        else if (dealRating === 'Good Deal') galleryBadge.style.color = 'var(--success)';
-        else if (dealRating === 'Fair Deal') galleryBadge.style.color = 'var(--warning)';
-        else galleryBadge.style.color = 'var(--text-secondary)';
-    }
-
-    // Market Note
-    const diff = car.priceDifferential || 0;
-    const marketEl = document.getElementById('market-note');
-    if (marketEl) {
-        if (diff > 0) {
-            marketEl.textContent = `$${Math.round(diff).toLocaleString()} below market average`;
-            marketEl.style.color = 'var(--success)';
-        } else if (diff < 0) {
-            marketEl.textContent = `$${Math.abs(Math.round(diff)).toLocaleString()} above market average`;
-            marketEl.style.color = 'var(--text-muted)';
-        } else {
-            marketEl.textContent = 'Priced at market average';
-        }
-    }
-
-    // Main image with smooth transition and scale
-    const mainImage = document.getElementById('main-image');
-    if (mainImage) {
-        mainImage.style.opacity = '0';
-        mainImage.style.transform = 'scale(1.05)';
-        mainImage.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        mainImage.src = imageUrl;
-        mainImage.alt = `${year} ${make} ${model}`;
-        mainImage.onload = () => {
-            requestAnimationFrame(() => {
-                mainImage.style.opacity = '1';
-                mainImage.style.transform = 'scale(1)';
-            });
-        };
-        mainImage.onerror = () => {
-            mainImage.src = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800';
-            mainImage.style.opacity = '1';
-            mainImage.style.transform = 'scale(1)';
-        };
-    }
-
-    // Quick stats safely
-    safeSetText('stat-mileage', mileage.toLocaleString());
-    safeSetText('stat-transmission', (car.localizedTransmission || car.transmission || 'Auto').split(' ')[0]);
-    safeSetText('stat-drivetrain', car.localizedDriveTrain || car.drivetrain || 'FWD');
-    safeSetText('stat-engine', (car.localizedEngineDisplayName || 'V6').split(' ')[0]);
-
-    // Dealer info
-    const dealerName = car.serviceProviderName || car.dealerName || car.dealer?.name || 'Authorized Dealer';
-    const reviewCount = car.reviewCount || car.dealer?.reviews || 24;
-
-    safeSetText('dealer-name', dealerName);
-
-    // Features grid (key highlights) with staggered animation
-    const features = [
-        { icon: '🛣️', label: 'Mileage', value: `${mileage.toLocaleString()} mi` },
-        { icon: '⚙️', label: 'Drivetrain', value: car.localizedDriveTrain || car.drivetrain || 'FWD' },
-        { icon: '🎨', label: 'Exterior', value: car.localizedExteriorColor || car.exteriorColor || 'N/A' },
-        { icon: '💺', label: 'Interior', value: car.localizedInteriorColor || car.interiorColor || 'N/A' },
-        { icon: '🔧', label: 'Engine', value: car.localizedEngineDisplayName || 'N/A' },
-        { icon: '⛽', label: 'Fuel', value: car.localizedFuelType || car.fuelType || 'Gasoline' },
-        { icon: '🔄', label: 'Transmission', value: car.localizedTransmission || car.transmission || 'Auto' },
-        { icon: '🚗', label: 'Body', value: car.bodyTypeName || car.bodyType || 'Sedan' }
-    ];
-
-    const featuresGrid = document.getElementById('features-grid');
-    if (featuresGrid) {
-        featuresGrid.innerHTML = features.map((f, index) => `
-            <div class="feature-item" style="opacity: 0; transform: translateY(10px) scale(0.95); transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 60}ms, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 60}ms;">
-                <div class="feature-icon">${f.icon}</div>
-                <div class="feature-content">
-                    <span class="feature-label">${f.label}</span>
-                    <span class="feature-value">${f.value}</span>
-                </div>
-            </div>
-        `).join('');
-        
-        // Trigger animations
-        setTimeout(() => {
-            const items = featuresGrid.querySelectorAll('.feature-item');
-            items.forEach(item => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateY(0) scale(1)';
-            });
-        }, 150);
-    }
-
-    // Specs Grid (Detailed)
-    const specs = [
-        { label: 'Make', value: make },
-        { label: 'Model', value: model },
-        { label: 'Year', value: year },
-        { label: 'Trim', value: trim || 'Base' },
-        { label: 'Body Style', value: car.bodyTypeName || car.bodyType || 'Sedan' },
-        { label: 'Ext. Color', value: car.localizedExteriorColor || 'Unknown' },
-        { label: 'Int. Color', value: car.localizedInteriorColor || 'Unknown' },
-        { label: 'Stock #', value: car.stockNumber || 'N/A' },
-        { label: 'VIN', value: car.vin || 'Call for VIN' },
-        { label: 'Days Listed', value: car.daysOnMarket || 'Just Listed' }
-    ];
-
-    const specsGrid = document.getElementById('specs-grid'); // ID updated to match HTML
-    if (specsGrid) {
-        specsGrid.innerHTML = specs.map((s, index) => `
-            <div class="overview-item" style="opacity: 0; transform: translateY(10px) scale(0.95); transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 50}ms, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 50}ms;">
-                <span class="overview-label">${s.label}</span>
-                <span class="overview-value">${s.value}</span>
-            </div>
-        `).join('');
-        
-        // Trigger animations
-        setTimeout(() => {
-            const items = specsGrid.querySelectorAll('.overview-item');
-            items.forEach(item => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateY(0) scale(1)';
-            });
-        }, 250);
-    }
 }
 
 function safeSetText(id, text) {
