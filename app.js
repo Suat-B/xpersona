@@ -60,6 +60,41 @@ const aiLens = document.getElementById('ai-lens');
 let lastFocusedElement = null;
 let currentBriefCarId = null;
 
+// Toast Notification System
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toast-container') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    // Trigger animation
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+        });
+    });
+    
+    // Auto remove
+    setTimeout(() => {
+        toast.classList.add('exiting');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', init);
 
@@ -70,6 +105,8 @@ async function init() {
     setupInfiniteScroll();
     await loadCars();
     syncPersonaUI();
+    updateSavedCount();
+    updateCompareCount();
 }
 
 function hydrateFromUrlParams() {
@@ -843,6 +880,12 @@ function updateAiLens(nlSearch, rawSearch) {
 }
 
 function applyFilters() {
+    // Smooth transition for filter changes
+    if (carGrid) {
+        carGrid.style.opacity = '0.4';
+        carGrid.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    }
+    
     const make = filterMake.value;
     const model = filterModel.value;
     const year = filterYear.value;
@@ -929,24 +972,27 @@ function applyFilters() {
     // Reset and render first batch with smooth transition
     displayedCount = 0;
     
-    // Fade out existing cards
+    // Fade out existing cards with scale
     const existingCards = Array.from(carGrid.children);
     existingCards.forEach((card, index) => {
         setTimeout(() => {
-            card.style.transition = 'opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            card.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), scale 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             card.style.opacity = '0';
-            card.style.transform = 'translateY(-10px)';
+            card.style.transform = 'translateY(-10px) scale(0.95)';
             setTimeout(() => {
                 if (card.parentNode) card.remove();
-            }, 200);
-        }, index * 10);
+            }, 300);
+        }, index * 15);
     });
 
-    // Clear grid after fade out
+    // Clear grid after fade out and restore opacity
     setTimeout(() => {
         carGrid.innerHTML = '';
+        if (carGrid) {
+            carGrid.style.opacity = '1';
+        }
         loadMoreCars();
-    }, existingCards.length * 10 + 200);
+    }, existingCards.length * 15 + 300);
 }
 
 function loadMoreCars() {
@@ -974,14 +1020,14 @@ function loadMoreCars() {
 
         carGrid.appendChild(fragment);
 
-        // Staggered entrance animation
+        // Staggered entrance animation with scale
         const cards = Array.from(carGrid.children).slice(displayedCount);
         cards.forEach((card, index) => {
             setTimeout(() => {
-                card.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                card.style.transition = 'opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), scale 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, index * 30); // 30ms delay between each card
+                card.style.transform = 'translateY(0) scale(1)';
+            }, index * 40); // 40ms delay for smoother stagger
         });
 
         displayedCount += batch.length;
@@ -1121,14 +1167,58 @@ function setupFavoriteButtons() {
 function toggleFavorite(id, btn) {
     const updated = toggleFavoriteById(id);
     if (!btn) return;
+    
+    // Enhanced smooth animation with Apple-style spring
+    btn.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    btn.style.transform = 'scale(0.85)';
+    
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            btn.style.transform = 'scale(1.15)';
+            setTimeout(() => {
+                btn.style.transform = 'scale(1)';
+                setTimeout(() => {
+                    btn.style.transition = '';
+                }, 300);
+            }, 150);
+        });
+    });
+    
+    // Update badge count with animation
+    updateSavedCount();
+    
+    // Show toast notification
     if (updated) {
+        showToast('Car saved to favorites', 'success', 2000);
         btn.classList.add('active');
-        btn.querySelector('svg').setAttribute('fill', '#ff4444');
-        btn.querySelector('svg').setAttribute('stroke', '#ff4444');
+        const svg = btn.querySelector('svg');
+        if (svg) {
+            svg.style.transition = 'fill 0.2s, stroke 0.2s';
+            svg.setAttribute('fill', '#ff3b30');
+            svg.setAttribute('stroke', '#ff3b30');
+        }
     } else {
+        showToast('Removed from favorites', 'info', 2000);
         btn.classList.remove('active');
-        btn.querySelector('svg').setAttribute('fill', 'none');
-        btn.querySelector('svg').setAttribute('stroke', '#666');
+        const svg = btn.querySelector('svg');
+        if (svg) {
+            svg.style.transition = 'fill 0.2s, stroke 0.2s';
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', '#666');
+        }
+    }
+}
+
+function updateSavedCount() {
+    const savedCountEl = document.getElementById('header-saved-count');
+    const savedCount = document.getElementById('saved-count');
+    const count = favorites.size;
+    
+    if (savedCountEl) {
+        animateValue(savedCountEl, parseInt(savedCountEl.textContent) || 0, count, 300);
+    }
+    if (savedCount) {
+        animateValue(savedCount, parseInt(savedCount.textContent) || 0, count, 300);
     }
 }
 
@@ -1305,12 +1395,41 @@ function selectPersona(persona) {
 }
 
 function updateSavedCount() {
-    if (savedCountEl) savedCountEl.textContent = String(favorites.size);
-    if (headerSavedCountEl) headerSavedCountEl.textContent = String(favorites.size);
+    // Smooth counter animation
+    const animateCount = (el, newValue) => {
+        if (!el) return;
+        const oldValue = parseInt(el.textContent) || 0;
+        const newVal = parseInt(newValue) || 0;
+        if (oldValue === newVal) return;
+        
+        el.style.transform = 'scale(1.2)';
+        el.textContent = String(newVal);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                el.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                el.style.transform = 'scale(1)';
+            });
+        });
+    };
+    
+    animateCount(savedCountEl, favorites.size);
+    animateCount(headerSavedCountEl, favorites.size);
 }
 
 function updateCompareCount() {
-    if (compareCountEl) compareCountEl.textContent = String(compare.size);
+    if (!compareCountEl) return;
+    const oldValue = parseInt(compareCountEl.textContent) || 0;
+    const newValue = compare.size;
+    if (oldValue === newValue) return;
+    
+    compareCountEl.style.transform = 'scale(1.2)';
+    compareCountEl.textContent = String(newValue);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            compareCountEl.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            compareCountEl.style.transform = 'scale(1)';
+        });
+    });
 }
 
 function persistCompare() {
@@ -1339,24 +1458,62 @@ function toggleCompare(id, btn) {
     if (compare.has(key)) {
         compare.delete(key);
         if (btn) {
-            btn.classList.remove('active');
-            btn.textContent = 'Compare';
+            // Enhanced smooth animation
+            btn.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.2s';
+            btn.style.transform = 'scale(0.9)';
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    btn.classList.remove('active');
+                    btn.textContent = 'Compare';
+                    btn.style.transform = 'scale(1)';
+                    setTimeout(() => {
+                        btn.style.transition = '';
+                    }, 300);
+                });
+            });
         }
+        showToast('Removed from compare', 'info', 2000);
+        updateCompareCount();
         persistCompare();
         return;
     }
 
     if (compare.size >= 3) {
+        showToast('Maximum 3 cars can be compared', 'error', 3000);
         openCompare();
         return;
     }
 
     compare.add(key);
     if (btn) {
-        btn.classList.add('active');
-        btn.textContent = 'Compared';
+        // Enhanced smooth animation with spring effect
+        btn.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.2s';
+        btn.style.transform = 'scale(0.9)';
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                btn.style.transform = 'scale(1.1)';
+                btn.classList.add('active');
+                btn.textContent = 'Compared';
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                    setTimeout(() => {
+                        btn.style.transition = '';
+                    }, 300);
+                }, 150);
+            });
+        });
     }
+    showToast('Added to compare', 'success', 2000);
+    updateCompareCount();
     persistCompare();
+}
+
+function updateCompareCount() {
+    const compareCountEl = document.getElementById('compare-count');
+    if (compareCountEl) {
+        const count = compare.size;
+        animateValue(compareCountEl, parseInt(compareCountEl.textContent) || 0, count, 300);
+    }
 }
 
 function openCompare() {

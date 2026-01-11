@@ -127,7 +127,7 @@ body {
   font-family: var(--font-main);
   background: var(--bg-primary);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.011em;
@@ -138,19 +138,25 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.5px;
   line-height: 1.1;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 h1 {
   letter-spacing: -1.2px;
   line-height: 1.05;
+  font-weight: 700;
 }
 
 h2 {
   letter-spacing: -0.8px;
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 h3 {
   letter-spacing: -0.5px;
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 a {
@@ -412,14 +418,14 @@ button {
 .results-section {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 32px;
+  padding: var(--spacing-2xl) var(--spacing-xl);
   min-height: 80vh;
 }
 
 .car-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--spacing-lg);
+  gap: 32px;
 }
 
 /* ========== Modern Card Design ========== */
@@ -507,9 +513,10 @@ button {
 
 /* Content Layout (Down Payment Centric) */
 .car-content {
-  padding: 20px;
+  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .car-header-row {
@@ -614,11 +621,12 @@ button {
 .btn-clean-action:hover {
   background: var(--bg-secondary);
   border-color: var(--text-primary);
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .btn-clean-action:active {
-  transform: scale(0.98);
+  transform: scale(0.98) translateY(0);
 }
 
 /* Badges */
@@ -1503,6 +1511,37 @@ button {
   }
 }
 
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
 /* ========== Glassmorphism Utilities ========== */
 .glass {
   background: rgba(255, 255, 255, 0.72);
@@ -1535,3 +1574,103 @@ html {
 .car-card:nth-child(5) { animation-delay: 0.25s; }
 .car-card:nth-child(6) { animation-delay: 0.3s; }
 .car-card:nth-child(n+7) { animation-delay: 0.35s; }
+
+/* ========== Toast Notifications ========== */
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: var(--spacing-xl);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  box-shadow: var(--shadow-elevated);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.9rem;
+  letter-spacing: -0.1px;
+  min-width: 280px;
+  max-width: 400px;
+  pointer-events: auto;
+  animation: toastSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  transition: transform var(--transition-fast);
+}
+
+.toast:hover {
+  transform: translateY(-2px);
+}
+
+.toast.success {
+  border-left: 3px solid var(--success);
+}
+
+.toast.error {
+  border-left: 3px solid var(--danger);
+}
+
+.toast.info {
+  border-left: 3px solid var(--accent-blue);
+}
+
+.toast.exiting {
+  animation: toastSlideOut 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ========== Skeleton Loading States ========== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 0%,
+    var(--bg-tertiary) 50%,
+    var(--bg-secondary) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-card {
+  background: white;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-card);
+}
+
+.skeleton-image {
+  aspect-ratio: 4/3;
+  width: 100%;
+}
+
+.skeleton-content {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.skeleton-line {
+  height: 16px;
+  border-radius: 4px;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+.skeleton-line.medium {
+  width: 80%;
+}

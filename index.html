@@ -15,14 +15,18 @@
       --text-muted: #86868b;
       --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
       --border: rgba(0, 0, 0, 0.08);
-      --card: rgba(255, 255, 255, 0.72);
-      --shadow: 0 12px 48px rgba(0, 0, 0, 0.16);
+      --card: rgba(255, 255, 255, 0.95);
+      --shadow: 0 12px 48px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.08);
       --shadow-sm: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+      --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
       --radius: 20px;
       --accent: #1d1d1f;
+      --accent-hover: #000000;
       --accent-blue: #0071e3;
+      --success: #30d158;
       --danger: #ff3b30;
       --transition: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       --glass-bg: rgba(255, 255, 255, 0.72);
       --glass-blur: blur(20px) saturate(180%);
     }
@@ -184,8 +188,9 @@
       border-radius: 99px;
       font-weight: 600;
       text-decoration: none;
-      transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s, background-color 0.2s;
+      transition: var(--transition-fast);
       font-size: 1rem;
+      letter-spacing: -0.011em;
     }
 
     .pill-cta-btn {
@@ -276,21 +281,22 @@
 
     main.page {
       flex: 1;
-      padding: 34px 18px 72px;
-      background: radial-gradient(1200px 600px at 50% 0%, rgba(37, 99, 235, 0.08), rgba(0, 0, 0, 0) 60%);
+      padding: 64px 32px 100px;
+      background: radial-gradient(1200px 600px at 50% 0%, rgba(0, 113, 227, 0.06), rgba(0, 0, 0, 0) 60%);
     }
 
     .section {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 28px 0;
+      padding: 60px 0;
     }
 
     .section-title {
       font-size: 1.6rem;
-      font-weight: 800;
+      font-weight: 700;
       letter-spacing: -0.6px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+      line-height: 1.2;
     }
 
     .section-subtitle {
@@ -302,17 +308,25 @@
     .grid-3 {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 14px;
-      margin-top: 18px;
+      gap: 32px;
+      margin-top: 32px;
     }
 
     .card {
       border-radius: var(--radius);
       background: var(--card);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      padding: 18px;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-card);
+      padding: 32px;
       overflow: hidden;
+      transition: all var(--transition-smooth);
+    }
+
+    .card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: var(--shadow-hover);
     }
 
     .card-title {
@@ -329,20 +343,27 @@
     .chip {
       display: inline-flex;
       align-items: center;
-      padding: 6px 10px;
+      padding: 6px 12px;
       border-radius: 999px;
       font-size: 0.78rem;
-      font-weight: 700;
-      border: 1px solid var(--border);
+      font-weight: 600;
+      border: 1px solid rgba(0, 0, 0, 0.08);
       color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.95);
       white-space: nowrap;
+      transition: var(--transition-fast);
+      letter-spacing: -0.011em;
+    }
+
+    .chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
     .chip.blue {
-      border-color: rgba(37, 99, 235, 0.25);
-      color: #1d4ed8;
-      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(0, 113, 227, 0.25);
+      color: var(--accent-blue);
+      background: rgba(0, 113, 227, 0.08);
     }
 
     .card p {

@@ -31,39 +31,88 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Staggered content reveal animation
+// Staggered content reveal animation with Apple-style easing
 function setupAnimations() {
-    const sections = document.querySelectorAll('.info-section, .quick-stats, .price-card, .contact-card');
+    const sections = document.querySelectorAll('.info-section, .quick-stats, .price-card, .contact-card, .dealer-card');
     sections.forEach((section, index) => {
         section.style.opacity = '0';
         section.style.transform = 'translateY(20px)';
+        section.style.willChange = 'opacity, transform';
+        
         setTimeout(() => {
-            section.style.transition = 'opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            section.style.opacity = '1';
-            section.style.transform = 'translateY(0)';
+            section.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), scale 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            requestAnimationFrame(() => {
+                section.style.opacity = '1';
+                section.style.transform = 'translateY(0) scale(1)';
+                setTimeout(() => {
+                    section.style.willChange = 'auto';
+                }, 600);
+            });
         }, index * 100);
+    });
+    
+    // Animate gallery thumbnails
+    const thumbs = document.querySelectorAll('.gallery-thumb');
+    thumbs.forEach((thumb, index) => {
+        thumb.style.opacity = '0';
+        thumb.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            thumb.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            requestAnimationFrame(() => {
+                thumb.style.opacity = '1';
+                thumb.style.transform = 'scale(1)';
+            });
+        }, 400 + index * 30);
     });
 }
 
-// Parallax effect on scroll
+// Enhanced parallax effect on scroll with smooth easing
 function setupParallax() {
     const galleryWrapper = document.querySelector('.gallery-main-wrapper');
+    const galleryImage = document.querySelector('.gallery-main-image');
     if (!galleryWrapper) return;
 
     let ticking = false;
+    let lastScrollY = window.pageYOffset;
+    
     window.addEventListener('scroll', () => {
         if (!ticking) {
             requestAnimationFrame(() => {
                 const scrolled = window.pageYOffset;
-                const rate = scrolled * 0.3;
-                if (galleryWrapper) {
+                const scrollDelta = scrolled - lastScrollY;
+                const rate = scrolled * 0.2; // Reduced for subtler effect
+                
+                // Smooth parallax for gallery
+                if (galleryWrapper && scrolled < galleryWrapper.offsetHeight) {
                     galleryWrapper.style.transform = `translateY(${rate}px)`;
+                    galleryWrapper.style.transition = 'transform 0.1s ease-out';
                 }
+                
+                // Subtle zoom effect on image
+                if (galleryImage && scrolled < galleryWrapper.offsetHeight) {
+                    const zoom = 1 + (scrolled * 0.0005);
+                    galleryImage.style.transform = `scale(${Math.min(zoom, 1.1)})`;
+                    galleryImage.style.transition = 'transform 0.1s ease-out';
+                }
+                
+                lastScrollY = scrolled;
                 ticking = false;
             });
             ticking = true;
         }
     });
+    
+    // Reset on scroll to top
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset === 0) {
+            if (galleryWrapper) {
+                galleryWrapper.style.transform = 'translateY(0)';
+            }
+            if (galleryImage) {
+                galleryImage.style.transform = 'scale(1)';
+            }
+        }
+    }, { passive: true });
 }
 
 function renderCarDetails() {
@@ -80,6 +129,17 @@ function renderCarDetails() {
 
     // Page title
     document.title = `${year} ${make} ${model} | xpersona`;
+    
+    // Smooth page entrance with scale
+    document.body.style.opacity = '0';
+    document.body.style.transform = 'scale(0.98)';
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            document.body.style.transition = 'opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            document.body.style.opacity = '1';
+            document.body.style.transform = 'scale(1)';
+        });
+    });
 
     // Breadcrumb
     const breadcrumbModel = document.getElementById('breadcrumb-model');
@@ -114,12 +174,44 @@ function renderCarDetails() {
             const label = priceDisplay.querySelector('.price-label');
             if (label) label.textContent = 'Estimated Down Payment';
 
-            priceEl.textContent = downPaymentText;
-
+            // Smooth price animation
+            animatePrice(priceEl, 0, downPaymentAmount, 600);
+            
             const subText = priceDisplay.querySelector('.price-full');
-            if (subText) subText.textContent = `Cash Price: $${price.toLocaleString()}`;
+            if (subText) {
+                subText.style.opacity = '0';
+                subText.textContent = `Cash Price: $${price.toLocaleString()}`;
+                setTimeout(() => {
+                    subText.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    subText.style.opacity = '1';
+                }, 100);
+            }
         }
     }
+}
+
+// Smooth price animation
+function animatePrice(element, start, end, duration) {
+    if (!element) return;
+    const startTime = performance.now();
+    const startValue = start;
+    const endValue = end;
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+        const current = Math.round(startValue + (endValue - startValue) * easeOut);
+        element.textContent = `$${current.toLocaleString()}`;
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = `$${endValue.toLocaleString()}`;
+        }
+    }
+    
+    requestAnimationFrame(update);
 
     // Deal Rating Logic
     const dealRating = formatDealRating(car.dealRating);
@@ -164,11 +256,18 @@ function renderCarDetails() {
         }
     }
 
-    // Main image
+    // Main image with smooth transition and scale
     const mainImage = document.getElementById('main-image');
     if (mainImage) {
+        mainImage.style.opacity = '0';
+        mainImage.style.transform = 'scale(1.05)';
+        mainImage.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         mainImage.src = imageUrl;
         mainImage.alt = `${year} ${make} ${model}`;
+        mainImage.onload = () => {
+            mainImage.style.opacity = '1';
+            mainImage.style.transform = 'scale(1)';
+        };
     }
 
     // Quick stats safely
@@ -183,7 +282,7 @@ function renderCarDetails() {
 
     safeSetText('dealer-name', dealerName);
 
-    // Features grid (key highlights)
+    // Features grid (key highlights) with staggered animation
     const features = [
         { icon: '🛣️', label: 'Mileage', value: `${mileage.toLocaleString()} mi` },
         { icon: '⚙️', label: 'Drivetrain', value: car.localizedDriveTrain || car.drivetrain || 'FWD' },
@@ -197,8 +296,8 @@ function renderCarDetails() {
 
     const featuresGrid = document.getElementById('features-grid');
     if (featuresGrid) {
-        featuresGrid.innerHTML = features.map(f => `
-            <div class="feature-item">
+        featuresGrid.innerHTML = features.map((f, index) => `
+            <div class="feature-item" style="opacity: 0; transform: translateY(10px) scale(0.95); transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 60}ms, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 60}ms;">
                 <div class="feature-icon">${f.icon}</div>
                 <div class="feature-content">
                     <span class="feature-label">${f.label}</span>
@@ -206,6 +305,15 @@ function renderCarDetails() {
                 </div>
             </div>
         `).join('');
+        
+        // Trigger animations
+        setTimeout(() => {
+            const items = featuresGrid.querySelectorAll('.feature-item');
+            items.forEach(item => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0) scale(1)';
+            });
+        }, 150);
     }
 
     // Specs Grid (Detailed)
@@ -224,12 +332,21 @@ function renderCarDetails() {
 
     const specsGrid = document.getElementById('specs-grid'); // ID updated to match HTML
     if (specsGrid) {
-        specsGrid.innerHTML = specs.map(s => `
-            <div class="overview-item">
+        specsGrid.innerHTML = specs.map((s, index) => `
+            <div class="overview-item" style="opacity: 0; transform: translateY(10px) scale(0.95); transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 50}ms, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 50}ms;">
                 <span class="overview-label">${s.label}</span>
                 <span class="overview-value">${s.value}</span>
             </div>
         `).join('');
+        
+        // Trigger animations
+        setTimeout(() => {
+            const items = specsGrid.querySelectorAll('.overview-item');
+            items.forEach(item => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0) scale(1)';
+            });
+        }, 250);
     }
 }
 
@@ -255,13 +372,46 @@ function shareCar() {
     alert('Link copied to clipboard!');
 }
 
+let currentImageIndex = 0;
+let images = [];
+
 function prevImage() {
-    // Placeholder for gallery logic
-    console.log('Previous image');
+    if (!images.length) return;
+    currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+    updateGalleryImage();
 }
 
 function nextImage() {
-    // Placeholder for gallery logic
-    console.log('Next image');
+    if (!images.length) return;
+    currentImageIndex = (currentImageIndex + 1) % images.length;
+    updateGalleryImage();
+}
+
+function updateGalleryImage() {
+    const mainImage = document.getElementById('main-image');
+    const thumbs = document.querySelectorAll('.gallery-thumb');
+    
+    if (!mainImage || !images[currentImageIndex]) return;
+    
+    // Smooth fade transition
+    mainImage.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    mainImage.style.opacity = '0';
+    
+    setTimeout(() => {
+        mainImage.src = images[currentImageIndex];
+        mainImage.style.opacity = '1';
+    }, 150);
+    
+    // Update active thumbnail with smooth transition
+    thumbs.forEach((thumb, index) => {
+        thumb.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.2s';
+        if (index === currentImageIndex) {
+            thumb.classList.add('active');
+            thumb.style.transform = 'scale(1.05)';
+        } else {
+            thumb.classList.remove('active');
+            thumb.style.transform = 'scale(1)';
+        }
+    });
 }
 
