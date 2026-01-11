@@ -992,6 +992,13 @@ function applyFilters() {
             carGrid.style.opacity = '1';
         }
         loadMoreCars();
+        
+        // Show results count toast
+        if (filteredCars.length > 0) {
+            showToast(`Found ${filteredCars.length.toLocaleString()} ${filteredCars.length === 1 ? 'car' : 'cars'}`, 'info', 2000);
+        } else {
+            showToast('No cars match your filters', 'error', 3000);
+        }
     }, existingCards.length * 15 + 300);
 }
 

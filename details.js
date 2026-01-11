@@ -51,18 +51,51 @@ function setupAnimations() {
         }, index * 100);
     });
     
-    // Animate gallery thumbnails
+    // Animate gallery thumbnails with enhanced transitions
     const thumbs = document.querySelectorAll('.gallery-thumb');
     thumbs.forEach((thumb, index) => {
         thumb.style.opacity = '0';
-        thumb.style.transform = 'scale(0.9)';
+        thumb.style.transform = 'scale(0.9) translateY(10px)';
         setTimeout(() => {
             thumb.style.transition = 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             requestAnimationFrame(() => {
                 thumb.style.opacity = '1';
-                thumb.style.transform = 'scale(1)';
+                thumb.style.transform = 'scale(1) translateY(0)';
             });
         }, 400 + index * 30);
+    });
+    
+    // Setup gallery image transitions
+    setupGalleryTransitions();
+}
+
+// Enhanced gallery image transitions
+function setupGalleryTransitions() {
+    const mainImage = document.getElementById('main-image');
+    const thumbs = document.querySelectorAll('.gallery-thumb');
+    
+    if (!mainImage || !thumbs.length) return;
+    
+    thumbs.forEach(thumb => {
+        thumb.addEventListener('click', function() {
+            const newSrc = this.src;
+            if (mainImage.src === newSrc) return;
+            
+            // Smooth crossfade transition
+            mainImage.style.opacity = '0';
+            mainImage.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            
+            setTimeout(() => {
+                mainImage.src = newSrc;
+                requestAnimationFrame(() => {
+                    mainImage.style.opacity = '1';
+                });
+            }, 150);
+            
+            // Update active thumbnail
+            thumbs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
     });
 }
 
@@ -265,6 +298,13 @@ function animatePrice(element, start, end, duration) {
         mainImage.src = imageUrl;
         mainImage.alt = `${year} ${make} ${model}`;
         mainImage.onload = () => {
+            requestAnimationFrame(() => {
+                mainImage.style.opacity = '1';
+                mainImage.style.transform = 'scale(1)';
+            });
+        };
+        mainImage.onerror = () => {
+            mainImage.src = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800';
             mainImage.style.opacity = '1';
             mainImage.style.transform = 'scale(1)';
         };
