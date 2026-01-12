@@ -67,6 +67,8 @@ const pulseModal = document.getElementById('pulse-modal');
 const pulseBody = document.getElementById('pulse-body');
 let lastFocusedElement = null;
 let currentBriefCarId = null;
+let pendingBriefCarId = null;
+let briefCopyState = { carId: null, negotiationText: '', questionsText: '' };
 
 // Toast Notification System
 function showToast(message, type = 'info', duration = 3000) {
@@ -130,6 +132,20 @@ function buildShortlistLink(ids) {
     if (filterBody?.value) params.set('body', String(filterBody.value));
     if (sortSelect?.value) params.set('sort', String(sortSelect.value));
     params.set('shortlist', clean.join(','));
+
+    return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+}
+
+function buildBriefLink(carId) {
+    const id = String(carId || '').trim();
+    if (!id) return '';
+
+    const params = new URLSearchParams();
+    if (searchInput?.value) params.set('q', String(searchInput.value || '').trim());
+    if (currentPersona) params.set('persona', String(currentPersona));
+    if (filterBody?.value) params.set('body', String(filterBody.value));
+    if (sortSelect?.value) params.set('sort', String(sortSelect.value));
+    params.set('brief', id);
 
     return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 }
@@ -242,6 +258,12 @@ async function init() {
     updateSavedCount();
     updateCompareCount();
     refreshPulseFromData();
+    if (pendingBriefCarId) {
+        const id = pendingBriefCarId;
+        pendingBriefCarId = null;
+        try { sessionStorage.removeItem('pendingBriefCarId'); } catch { }
+        openDealBrief(id);
+    }
 }
 
 function hydrateFromUrlParams() {
@@ -252,6 +274,7 @@ function hydrateFromUrlParams() {
         const body = (params.get('body') || '').trim();
         const sort = (params.get('sort') || '').trim();
         const shortlistRaw = (params.get('shortlist') || '').trim();
+        const briefRaw = (params.get('brief') || params.get('dealBrief') || '').trim();
 
         if (q && searchInput) searchInput.value = q;
         if (sort && sortSelect) sortSelect.value = sort;
@@ -289,6 +312,22 @@ function hydrateFromUrlParams() {
             try {
                 const saved = JSON.parse(sessionStorage.getItem('sharedShortlistIds') || '[]');
                 if (Array.isArray(saved)) sharedShortlistIds = saved;
+            } catch { }
+        }
+
+        if (briefRaw) {
+            pendingBriefCarId = briefRaw;
+            try { sessionStorage.setItem('pendingBriefCarId', briefRaw); } catch { }
+
+            params.delete('brief');
+            params.delete('dealBrief');
+            const next = params.toString();
+            const url = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash || ''}`;
+            window.history.replaceState({}, document.title, url);
+        } else {
+            try {
+                const savedBrief = sessionStorage.getItem('pendingBriefCarId');
+                if (savedBrief) pendingBriefCarId = savedBrief;
             } catch { }
         }
     } catch {
@@ -347,6 +386,27 @@ function setupEventListeners() {
             }
             if (action === 'brief') {
                 renderDealBrief(carId);
+                return;
+            }
+            if (action === 'copy-brief-link') {
+                const link = buildBriefLink(carId);
+                copyTextToClipboard(link).then((ok) => {
+                    showToast(ok ? 'Brief link copied' : 'Could not copy link', ok ? 'success' : 'error');
+                });
+                return;
+            }
+            if (action === 'copy-negotiation') {
+                const text = (briefCopyState?.carId === String(carId)) ? briefCopyState.negotiationText : '';
+                copyTextToClipboard(text).then((ok) => {
+                    showToast(ok ? 'Offer text copied' : 'Could not copy offer text', ok ? 'success' : 'error');
+                });
+                return;
+            }
+            if (action === 'copy-questions') {
+                const text = (briefCopyState?.carId === String(carId)) ? briefCopyState.questionsText : '';
+                copyTextToClipboard(text).then((ok) => {
+                    showToast(ok ? 'Questions copied' : 'Could not copy questions', ok ? 'success' : 'error');
+                });
                 return;
             }
             if (action === 'view') {
@@ -2370,7 +2430,8 @@ function renderDealBrief(carId) {
       </div>
     ` : '';
 
-    const negotiationScript = escapeHtml(`Hi ${car.dealer?.name ? car.dealer.name : 'there'} — I'm interested in this ${title}. If you can do ${money(aimOffer)} out-the-door, I can come in today. Can you send the full OTD breakdown (tax/title/fees) and confirm it's still available?`);
+    const negotiationTextRaw = `Hi ${car.dealer?.name ? car.dealer.name : 'there'} — I'm interested in this ${title}. If you can do ${money(aimOffer)} out-the-door, I can come in today. Can you send the full OTD breakdown (tax/title/fees) and confirm it's still available?`;
+    const negotiationScript = escapeHtml(negotiationTextRaw);
 
     const negotiationHtml = `
       <div class="ai-brief-card">
@@ -2387,6 +2448,26 @@ function renderDealBrief(carId) {
         ${flags.length
             ? `<div class="ai-flags">${flags.map(f => `<span class="ai-flag">${escapeHtml(f)}</span>`).join('')}</div>`
             : `<div class="ai-brief-note">No obvious red flags from available data.</div>`}
+      </div>
+    `;
+
+    briefCopyState = {
+        carId: String(car.id),
+        negotiationText: negotiationTextRaw,
+        questionsText: questions.map(q => `- ${q}`).join('\n')
+    };
+
+    const shareHtml = `
+      <div class="ai-brief-card ai-actions">
+        <button type="button" class="ai-action-btn" data-ai-action="copy-brief-link" data-ai-car-id="${escapeHtml(String(car.id))}">
+          Copy Brief Link
+        </button>
+        <button type="button" class="ai-action-btn" data-ai-action="copy-negotiation" data-ai-car-id="${escapeHtml(String(car.id))}">
+          Copy Offer Text
+        </button>
+        <button type="button" class="ai-action-btn" data-ai-action="copy-questions" data-ai-car-id="${escapeHtml(String(car.id))}">
+          Copy Questions
+        </button>
       </div>
     `;
 
@@ -2445,7 +2526,7 @@ function renderDealBrief(carId) {
       </div>
     ` : '';
 
-    aiBriefBody.innerHTML = summaryBadges + metersHtml + metricsHtml + negotiationHtml + compsHtml + flagsHtml + actionsHtml + questionsHtml + similarHtml;
+    aiBriefBody.innerHTML = summaryBadges + metersHtml + metricsHtml + negotiationHtml + compsHtml + flagsHtml + shareHtml + actionsHtml + questionsHtml + similarHtml;
 }
 
 function openDealBrief(carId) {

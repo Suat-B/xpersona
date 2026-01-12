@@ -279,10 +279,10 @@ function renderCarDetails() {
         };
     }
 
-    safeSetText('stat-mileage', mileage.toLocaleString());
-    safeSetText('stat-transmission', (car.localizedTransmission || car.transmission || 'Auto').split(' ')[0]);
-    safeSetText('stat-drivetrain', car.localizedDriveTrain || car.drivetrain || 'FWD');
-    safeSetText('stat-engine', (car.localizedEngineDisplayName || 'V6').split(' ')[0]);
+    safeSetText('stat-mileage', formatMileageQuickStat(mileage));
+    safeSetText('stat-transmission', formatTransmissionQuickStat(car.localizedTransmission || car.transmission || 'Auto'));
+    safeSetText('stat-drivetrain', formatDrivetrainQuickStat(car.localizedDriveTrain || car.drivetrain || 'FWD'));
+    safeSetText('stat-engine', formatEngineQuickStat(car.localizedEngineDisplayName || car.engine || ''));
 
     const dealerName = car.serviceProviderName || car.dealerName || car.dealer?.name || 'Authorized Dealer';
     safeSetText('dealer-name', dealerName);
@@ -378,6 +378,54 @@ function animatePrice(element, start, end, duration) {
 function safeSetText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
+}
+
+function formatMileageQuickStat(mileage) {
+    const m = Number(mileage || 0);
+    if (!m || Number.isNaN(m)) return '--';
+    if (m >= 1000) return `${Math.round(m / 1000)}k`;
+    return String(Math.round(m));
+}
+
+function formatTransmissionQuickStat(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '--';
+    const lower = raw.toLowerCase();
+    if (lower.includes('manual')) return 'Manual';
+    if (lower.includes('automatic') || lower.includes('auto')) {
+        const speed = raw.match(/(\d+)\s*[- ]?\s*speed/i)?.[1];
+        return speed ? `${speed}-spd Auto` : 'Auto';
+    }
+    const speed = raw.match(/(\d+)\s*[- ]?\s*speed/i)?.[1];
+    if (speed) return `${speed}-spd`;
+    return raw;
+}
+
+function formatDrivetrainQuickStat(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '--';
+    const lower = raw.toLowerCase();
+    if (lower.includes('all-wheel')) return 'AWD';
+    if (lower.includes('four-wheel')) return '4WD';
+    if (lower.includes('front')) return 'FWD';
+    if (lower.includes('rear')) return 'RWD';
+    if (raw.length <= 6) return raw.toUpperCase();
+    return raw;
+}
+
+function formatEngineQuickStat(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '--';
+
+    const litersMatch = raw.match(/(\d+(?:\.\d+)?)\s*l\b/i);
+    const cylMatch = raw.match(/\b([IV]\d|V\d|H\d)\b/i);
+    if (litersMatch && cylMatch) return `${litersMatch[1]}L ${cylMatch[1].toUpperCase()}`;
+    if (litersMatch) return `${litersMatch[1]}L`;
+
+    const hpMatch = raw.match(/(\d{2,4})\s*hp\b/i);
+    if (hpMatch) return `${hpMatch[1]} hp`;
+
+    return raw;
 }
 
 function formatDealRating(rating) {

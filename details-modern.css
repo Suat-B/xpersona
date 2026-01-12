@@ -68,7 +68,21 @@
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-bottom: 1px solid var(--border-default);
+    padding: 0;
     transition: all var(--transition-smooth);
+}
+
+.header-glass .header-inner {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
 }
 
 .header-glass.scrolled {
@@ -99,15 +113,27 @@
 
 /* Simplified Logo */
 
-.header-glass .nav-link {
-    color: var(--text-secondary);
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: color var(--transition-fast);
+.header-glass .header-nav-link {
+    border-color: rgba(0, 0, 0, 0.06);
+    background: rgba(0, 0, 0, 0.03);
+    color: rgba(29, 29, 31, 0.78);
 }
 
-.header-glass .nav-link:hover {
-    color: var(--accent-primary);
+.header-glass .header-nav-link:hover {
+    transform: none;
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: rgba(29, 29, 31, 0.92);
+}
+
+.header-glass .header-nav-link:active {
+    transform: none;
+}
+
+.header-glass .header-nav-link:focus-visible {
+    outline: none;
+    border-color: rgba(0, 113, 227, 0.45);
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.16);
 }
 
 .btn-glass {
